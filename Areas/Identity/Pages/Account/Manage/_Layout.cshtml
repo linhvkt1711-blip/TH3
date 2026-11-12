@@ -1,0 +1,121 @@
+@{
+    if (ViewData.TryGetValue("ParentLayout", out var parentLayout))
+    {
+        Layout = (string)parentLayout;
+    }
+    else
+    {
+        Layout = "/Views/Shared/_Layout.cshtml";
+    }
+}
+
+<div class="account-settings-container my-5">
+    <div class="row">
+        <div class="col-12 mb-4">
+            <div class="settings-header-card p-4 rounded-4 shadow-sm border-0 d-flex align-items-center justify-content-between text-white animate-fade-in" style="background: linear-gradient(135deg, #d70018 0%, #af0013 100%);">
+                <div>
+                    <h2 class="fw-bold mb-1"><i class="fa-solid fa-user-gear me-2"></i>Quản lý tài khoản</h2>
+                    <p class="mb-0 opacity-75 small">Thay đổi thông tin cá nhân, mật khẩu và cấu hình bảo mật của bạn</p>
+                </div>
+                <div class="d-none d-md-block text-end">
+                    <span class="badge bg-white bg-opacity-25 fs-6 py-2 px-3 rounded-pill">Thành viên ACE Store</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-3 col-md-4 mb-4">
+            <div class="settings-sidebar p-3 rounded-4 shadow-sm border-0 bg-white">
+                <div class="user-profile-summary text-center pb-3 mb-3 border-bottom">
+                    <div class="avatar-container position-relative d-inline-block mb-3">
+                        <div class="avatar-large-circle d-flex align-items-center justify-content-center bg-danger text-white fw-bold fs-2 shadow-sm" style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%) !important;">
+                            @User.Identity.Name?[0].ToString().ToUpper()
+                        </div>
+                        <span class="position-absolute bottom-0 end-0 bg-success border border-white border-2 rounded-circle p-2" title="Đang hoạt động" style="width: 15px; height: 15px;"></span>
+                    </div>
+                    <h6 class="fw-bold mb-1 text-dark text-truncate px-2" style="max-width: 100%;">@User.Identity.Name</h6>
+                    <span class="badge bg-danger bg-opacity-10 text-danger small px-2 py-1">Khách hàng</span>
+                </div>
+                <partial name="_ManageNav" />
+            </div>
+        </div>
+        <div class="col-lg-9 col-md-8">
+            <div class="settings-content-card p-4 rounded-4 shadow-sm border-0 bg-white" style="min-height: 400px; transition: all 0.3s;">
+                @RenderBody()
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .rounded-4 {
+        border-radius: 16px !important;
+    }
+    
+    .settings-sidebar {
+        border: 1px solid rgba(0,0,0,0.05) !important;
+        transition: all 0.3s ease;
+    }
+    
+    .settings-sidebar .nav-pills .nav-link {
+        color: #495057;
+        font-weight: 500;
+        border-radius: 10px;
+        padding: 12px 16px;
+        margin-bottom: 6px;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border: 1px solid transparent;
+    }
+    
+    .settings-sidebar .nav-pills .nav-link:hover {
+        background-color: #f8f9fa;
+        color: #d70018;
+        transform: translateX(4px);
+    }
+    
+    .settings-sidebar .nav-pills .nav-link.active {
+        background: linear-gradient(135deg, #d70018 0%, #af0013 100%) !important;
+        color: white !important;
+        box-shadow: 0 4px 12px rgba(215, 0, 24, 0.25);
+    }
+
+    .form-floating > .form-control:focus {
+        border-color: #d70018;
+        box-shadow: 0 0 0 0.25rem rgba(215, 0, 24, 0.15);
+    }
+
+    .btn-save-settings {
+        background: linear-gradient(135deg, #d70018 0%, #af0013 100%);
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 10px;
+        font-weight: 600;
+        box-shadow: 0 4px 12px rgba(215, 0, 24, 0.2);
+        transition: all 0.2s ease;
+    }
+
+    .btn-save-settings:hover {
+        opacity: 0.9;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(215, 0, 24, 0.3);
+        color: white;
+    }
+    
+    .animate-fade-in {
+        animation: fadeIn 0.5s ease-out;
+    }
+    
+    @@keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-5px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+
+@section Scripts {
+    @await RenderSectionAsync("Scripts", required: false)
+}

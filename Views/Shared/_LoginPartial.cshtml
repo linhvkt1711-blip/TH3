@@ -1,0 +1,54 @@
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
+<ul class="navbar-nav d-flex flex-row align-items-center gap-2">
+    @if (SignInManager.IsSignedIn(User))
+    {
+        var currentUser = await UserManager.GetUserAsync(User);
+        var displayName = currentUser?.FullName ?? User.Identity?.Name ?? "Khách";
+
+        <li class="nav-item">
+            <a id="manage" class="nav-link p-0 d-flex align-items-center text-white"
+               href="/Identity/Account/Manage" title="Quản lý tài khoản">
+
+                <div class="user-pill d-flex align-items-center px-3 py-1 rounded-pill bg-white bg-opacity-10 hover-bright transition-all">
+                    <div class="avatar-circle me-2 d-flex align-items-center justify-content-center">
+                        <i class="fas fa-user text-white"></i>
+                    </div>
+
+                    <div class="user-info-text lh-1 d-flex flex-column text-start">
+                        <span style="font-size: 0.75rem; opacity: 0.9;">Chào,</span>
+                        <span class="fw-bold" style="font-size: 0.9rem;">@displayName</span>
+                    </div>
+                </div>
+            </a>
+        </li>
+
+        <li class="nav-item px-2">
+            <div style="width: 1px; height: 30px; background-color: rgba(255,255,255,0.2);"></div>
+        </li>
+
+        <li class="nav-item">
+            <form id="logoutForm" method="post" class="m-0"
+                  asp-area="Identity" asp-page="/Account/Logout"
+                  asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
+                <button type="submit" class="logout-btn d-flex flex-column align-items-center text-white bg-transparent border-0 opacity-75 hover-opacity-100 transition-all">
+                    <i class="fa fa-power-off mb-1" style="font-size: 1.1rem;"></i>
+                    <span style="font-size: 0.65rem; text-transform: uppercase; font-weight: 600;">Đăng xuất</span>
+                </button>
+            </form>
+        </li>
+    }
+    else
+    {
+        <li class="nav-item">
+            <a class="nav-link text-white opacity-75 hover-opacity-100 fw-medium" href="/Identity/Account/Register">Đăng ký</a>
+        </li>
+        <li class="nav-item ms-2">
+            <a class="btn btn-light btn-sm px-4 py-1 rounded-pill fw-bold text-danger border-0" href="/Identity/Account/Login">
+                Đăng nhập
+            </a>
+        </li>
+    }
+</ul>

@@ -1,0 +1,142 @@
+﻿@model TH3.Models.Product
+@using Microsoft.AspNetCore.Mvc.Rendering
+@{
+    ViewData["Title"] = "Chỉnh sửa sản phẩm";
+}
+
+<style>
+    .image-edit-card {
+        position: relative;
+        width: 120px;
+    }
+
+        .image-edit-card img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+    .btn-delete-img {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        background: red;
+        color: white;
+        border-radius: 50%;
+        width: 25px;
+        height: 25px;
+        border: none;
+        font-size: 12px;
+    }
+
+    .delete-checkbox {
+        display: none;
+    }
+
+    .image-marked-deleted {
+        opacity: 0.3;
+        filter: grayscale(1);
+        border: 2px solid red;
+    }
+</style>
+
+<div class="container mt-4 mb-5">
+    <div class="card shadow border-0">
+        <div class="card-header bg-primary text-white py-3">
+            <h4 class="mb-0 fw-bold">CHỈNH SỬA SẢN PHẨM</h4>
+        </div>
+        <div class="card-body p-4">
+            <form asp-action="Update" method="post" enctype="multipart/form-data">
+                <input type="hidden" asp-for="Id" />
+
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="form-group mb-3">
+                            <label asp-for="Name" class="fw-bold">Tên sản phẩm</label>
+                            <input asp-for="Name" class="form-control" />
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Price" class="fw-bold">Giá bán</label>
+                                <input asp-for="Price" class="form-control" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="CategoryId" class="fw-bold">Danh mục</label>
+                                <select asp-for="CategoryId" asp-items="@ViewBag.Categories" class="form-select"></select>
+                            </div>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label asp-for="Description" class="fw-bold">Mô tả</label>
+                            <textarea asp-for="Description" class="form-control" rows="5"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4 text-center border-start">
+                        <label class="fw-bold d-block mb-2">Ảnh chính hiện tại</label>
+                        <img id="imagePreview" src="@Model.ImageUrl" alt="Main" class="img-thumbnail mb-2" style="max-height: 200px;" />
+                        <input type="file" name="ImageUrl" class="form-control mt-2" id="imageInput" accept="image/*" />
+                    </div>
+                </div>
+
+                <hr />
+                <h5 class="fw-bold mb-3">QUẢN LÝ ẢNH PHỤ</h5>
+
+                <div class="d-flex flex-wrap gap-3 mb-4">
+                    @if (Model.ProductImages != null)
+                    {
+                        @foreach (var img in Model.ProductImages)
+                        {
+                            <div class="image-edit-card" id="card-@img.Id">
+                                <img src="@img.Url" />
+                                <button type="button" class="btn-delete-img" onclick="markForDelete(@img.Id)">X</button>
+                                <input type="checkbox" name="DeleteImageIds" value="@img.Id" id="check-@img.Id" class="delete-checkbox" />
+                            </div>
+                        }
+                    }
+                </div>
+
+                <div class="form-group mb-4">
+                    <label class="fw-bold text-success">Thêm ảnh phụ mới</label>
+                    <input type="file" name="NewSubImages" class="form-control" accept="image/*" multiple />
+                </div>
+
+                <div class="d-flex gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary px-5 py-2 fw-bold">CẬP NHẬT SẢN PHẨM</button>
+                    <a asp-action="Index" class="btn btn-outline-secondary px-4">Quay lại</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Preview ảnh chính khi chọn file mới
+    document.getElementById('imageInput').addEventListener('change', function (event) {
+        if (event.target.files && event.target.files[0]) {
+            var reader = new FileReader();
+            reader.onload = function () {
+                document.getElementById('imagePreview').src = reader.result;
+            };
+            reader.readAsDataURL(event.target.files[0]);
+        }
+    });
+
+    // Hàm đánh dấu ảnh cần xóa
+    function markForDelete(id) {
+        const checkbox = document.getElementById('check-' + id);
+        const card = document.getElementById('card-' + id);
+
+        checkbox.checked = !checkbox.checked;
+        if (checkbox.checked) {
+            card.querySelector('img').classList.add('image-marked-deleted');
+            card.querySelector('.btn-delete-img').innerText = "↩";
+            card.querySelector('.btn-delete-img').style.background = "gray";
+        } else {
+            card.querySelector('img').classList.remove('image-marked-deleted');
+            card.querySelector('.btn-delete-img').innerText = "X";
+            card.querySelector('.btn-delete-img').style.background = "red";
+        }
+    }
+</script>

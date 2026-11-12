@@ -1,0 +1,39 @@
+@page
+@model ResetAuthenticatorModel
+@{
+    ViewData["Title"] = "Khởi tạo lại khóa ứng dụng xác thực";
+    ViewData["ActivePage"] = "TwoFactorAuthentication";
+}
+
+<h3 class="fw-bold text-dark mb-4 border-bottom pb-2">
+    <i class="fa-solid fa-rotate-left text-danger me-2"></i>Khởi tạo lại khóa ứng dụng xác thực
+</h3>
+
+<div class="row animate-fade-in">
+    <div class="col-lg-8">
+        <div class="alert alert-danger border-0 rounded-3 shadow-sm d-flex align-items-center gap-2 mb-4">
+            <i class="fa-solid fa-triangle-exclamation fs-4"></i>
+            <div>
+                <strong>Cảnh báo:</strong> Nếu bạn khởi tạo lại khóa này, ứng dụng xác thực hiện tại trên điện thoại của bạn sẽ KHÔNG còn hoạt động và bạn phải cấu hình lại ứng dụng mới.
+            </div>
+        </div>
+
+        <form id="reset-authenticator-form" method="post">
+            <p class="text-muted small mb-4">
+                Hành động này sẽ vô hiệu hóa tất cả các mã xác thực hiện tại cho đến khi bạn quét mã khóa mới.
+            </p>
+            <div class="d-flex align-items-center gap-2">
+                <button id="reset-authenticator-button" class="btn btn-danger rounded-3 px-4 py-2 fw-semibold" type="submit">
+                    Khởi tạo lại khóa
+                </button>
+                <a asp-page="./TwoFactorAuthentication" class="btn btn-outline-secondary rounded-3 px-4 py-2 fw-semibold">
+                    Hủy bỏ
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

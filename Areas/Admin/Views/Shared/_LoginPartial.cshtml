@@ -1,0 +1,45 @@
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
+<ul class="navbar-nav d-flex flex-row align-items-center gap-2">
+
+    @if (SignInManager.IsSignedIn(User))
+    {
+        <li class="nav-item">
+            <a id="manage" class="nav-link text-white fw-semibold"
+               href="/Identity/Account/Manage">
+                <i class="fa fa-user me-1"></i>
+                @UserManager.GetUserName(User)
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <form id="logoutForm" method="post"
+                  asp-area="Identity" asp-page="/Account/Logout"
+                  asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
+
+                <button type="submit" class="btn btn-outline-light btn-sm">
+                    <i class="fa fa-sign-out-alt"></i> Logout
+                </button>
+            </form>
+        </li>
+    }
+    else
+    {
+        <li class="nav-item">
+            <a class="btn btn-outline-light btn-sm"
+               href="/Identity/Account/Register">
+                <i class="fa fa-user-plus"></i> Register
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <a class="btn btn-light btn-sm text-primary fw-bold"
+               href="/Identity/Account/Login">
+                <i class="fa fa-sign-in-alt"></i> Login
+            </a>
+        </li>
+    }
+
+</ul>

@@ -1,0 +1,61 @@
+@page
+@model EnableAuthenticatorModel
+@{
+    ViewData["Title"] = "Thiết lập ứng dụng xác thực";
+    ViewData["ActivePage"] = "TwoFactorAuthentication";
+}
+
+<h3 class="fw-bold text-dark mb-4 border-bottom pb-2">
+    <i class="fa-solid fa-mobile-screen text-danger me-2"></i>Thiết lập ứng dụng xác thực
+</h3>
+
+@if (!string.IsNullOrEmpty(Model.StatusMessage))
+{
+    var isError = Model.StatusMessage.StartsWith("Lỗi", StringComparison.OrdinalIgnoreCase) || Model.StatusMessage.StartsWith("Error", StringComparison.OrdinalIgnoreCase);
+    var statusMessageClass = isError ? "danger" : "success";
+    var iconClass = isError ? "fa-circle-xmark" : "fa-circle-check";
+    <div class="alert alert-@statusMessageClass alert-dismissible fade show d-flex align-items-center gap-2 rounded-3 border-0 shadow-sm mb-4" role="alert">
+        <i class="fa-solid @iconClass fs-5"></i>
+        <div>@Model.StatusMessage</div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="row animate-fade-in">
+    <div class="col-lg-10">
+        <p class="text-muted small">Để sử dụng ứng dụng xác thực, vui lòng thực hiện các bước sau:</p>
+        <ol class="list-group list-group-numbered border-0 bg-transparent mb-4">
+            <li class="list-group-item border-0 bg-transparent text-muted small px-0">
+                Tải xuống ứng dụng xác thực hai yếu tố như <strong>Google Authenticator</strong> hoặc <strong>Microsoft Authenticator</strong> từ App Store hoặc Google Play.
+            </li>
+            <li class="list-group-item border-0 bg-transparent text-muted small px-0">
+                Nhập khóa bảo mật sau vào ứng dụng xác thực của bạn:
+                <div class="my-2 p-3 bg-light rounded border text-center fw-bold text-dark fs-5 letter-spacing-1">
+                    @Model.SharedKey
+                </div>
+                <div class="text-muted small italic">Mẹo: Đảm bảo viết liền không có khoảng cách khi nhập vào ứng dụng nếu ứng dụng yêu cầu.</div>
+            </li>
+            <li class="list-group-item border-0 bg-transparent text-muted small px-0">
+                Sau khi quét mã hoặc nhập khóa ở trên, ứng dụng xác thực của bạn sẽ cung cấp cho bạn một mã gồm 6 số. Hãy nhập mã đó vào bên dưới để kích hoạt:
+            </li>
+        </ol>
+
+        <form id="send-code" method="post" class="mt-3">
+            <div asp-validation-summary="ModelOnly" class="text-danger small mb-3" role="alert"></div>
+            
+            <div class="form-floating mb-4" style="max-width: 350px;">
+                <input asp-for="Input.Code" class="form-control rounded-3 border" autocomplete="off" placeholder="Nhập mã xác thực" />
+                <label asp-for="Input.Code"><i class="fa-solid fa-key me-2 text-danger"></i>Mã xác thực 6 số</label>
+                <span asp-validation-for="Input.Code" class="text-danger small"></span>
+            </div>
+
+            <button type="submit" class="btn-save-settings d-flex align-items-center gap-2">
+                <i class="fa-solid fa-circle-check"></i> Xác minh và Kích hoạt
+            </button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

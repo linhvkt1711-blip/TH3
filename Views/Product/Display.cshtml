@@ -1,0 +1,504 @@
+@model TH3.Models.Product
+
+@{
+    ViewData["Title"] = Model.Name;
+    var compatibleDeviceSlug = Model.CompatibleDeviceCode switch
+    {
+        "IPX01" => "iphone-x",
+        "IP05" => "iphone-16-pro-max",
+        "IP02" => "iphone-15-prm",
+        "IP01" => "iphone-15-pro",
+        "SS01" => "samsung-s24-ultra",
+        _ => null
+    };
+    var catalogPhoneSlug = Model.ProductCode switch
+    {
+        "IPX01" => "iphone-x",
+        "IP05" => "iphone-16-pro-max",
+        "IP02" => "iphone-15-prm",
+        "IP01" => "iphone-15-pro",
+        "SS01" => "samsung-s24-ultra",
+        _ => Model.Name.Contains("iPhone X", StringComparison.OrdinalIgnoreCase) ? "iphone-x"
+            : Model.Name.Contains("iPhone 16", StringComparison.OrdinalIgnoreCase) ? "iphone-16-pro-max"
+            : Model.Name.Contains("Samsung", StringComparison.OrdinalIgnoreCase) ? "samsung-s24-ultra"
+            : Model.Name.Contains("Max", StringComparison.OrdinalIgnoreCase) ? "iphone-15-prm"
+            : null
+    };
+}
+
+<style>
+    /* Gallery Style */
+    .product-detail-container {
+        background-color: #fff;
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 0 15px rgba(0,0,0,0.05);
+        margin-top: 30px;
+    }
+
+    .main-image-wrapper {
+        border: 1px solid #eee;
+        border-radius: 10px;
+        overflow: hidden;
+        margin-bottom: 15px;
+        text-align: center;
+        background: #fdfdfd;
+    }
+
+        .main-image-wrapper img {
+            max-width: 100%;
+            height: 400px;
+            object-fit: contain;
+            transition: 0.3s;
+        }
+
+    .thumbnail-list {
+        display: flex;
+        gap: 10px;
+        overflow-x: auto;
+        padding-bottom: 10px;
+    }
+
+    .thumb-item {
+        width: 70px;
+        height: 70px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        cursor: pointer;
+        object-fit: cover;
+        transition: 0.2s;
+    }
+
+        .thumb-item:hover, .thumb-item.active {
+            border-color: #d70018;
+            box-shadow: 0 0 5px rgba(215, 0, 24, 0.3);
+        }
+
+    /* Info Style */
+    .product-name-detail {
+        font-size: 24px;
+        font-weight: 700;
+        margin-bottom: 15px;
+        color: #333;
+    }
+
+    .price-box {
+        background-color: #fef2f2;
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+
+    .current-price {
+        color: #d70018;
+        font-size: 28px;
+        font-weight: 700;
+    }
+
+    .btn-action-group .btn {
+        padding: 12px;
+        font-weight: 700;
+        border-radius: 8px;
+        text-transform: uppercase;
+    }
+
+    .btn-buy-now {
+        background-color: #d70018;
+        color: white;
+    }
+
+        .btn-buy-now:hover {
+            background-color: #a50012;
+            color: white;
+        }
+
+    .btn-add-cart {
+        background-color: #3b82f6;
+        color: white;
+    }
+
+    .description-content {
+        line-height: 1.8;
+        color: #4b5563;
+        white-space: pre-line;
+    }
+</style>
+
+<div class="container mb-5">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mt-3">
+            <li class="breadcrumb-item"><a asp-action="Index">Trang chủ</a></li>
+            <li class="breadcrumb-item active">@Model.Category?.Name</li>
+        </ol>
+    </nav>
+
+    <div class="product-detail-container">
+        <div class="row">
+            <div class="col-md-5">
+                <div class="main-image-wrapper">
+                    @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                    {
+                        <img id="mainImage" src="@Model.ImageUrl" alt="@Model.Name" />
+                    }
+                    else
+                    {
+                        <img id="mainImage" src="/images/no-image.png" alt="No Image" />
+                    }
+                </div>
+
+                <div class="thumbnail-list">
+                    <img class="thumb-item active" src="@Model.ImageUrl" onmouseover="changeImage(this.src, this)" />
+
+                    @if (Model.ProductImages != null)
+                    {
+                        @foreach (var img in Model.ProductImages)
+                        {
+                            <img class="thumb-item" src="@img.Url" onmouseover="changeImage(this.src, this)" />
+                        }
+                    }
+                </div>
+            </div>
+
+            <div class="col-md-7">
+                <h1 class="product-name-detail">@Model.Name</h1>
+
+                <!-- BADGE PHÂN LOẠI MÃ SẢN PHẨM RÕ RÀNG & ĐẸP MẮT -->
+                <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+                    <span class="badge bg-dark fs-6 px-3 py-2 text-warning border border-warning shadow-sm">
+                        <i class="fa fa-barcode me-1"></i> Mã SP: @Model.ProductCode
+                    </span>
+                    @if (!string.IsNullOrEmpty(Model.CompatibleDeviceCode))
+                    {
+                        <span class="badge bg-warning bg-opacity-25 text-dark fs-6 px-3 py-2 border border-warning">
+                            <i class="fa fa-mobile-screen me-1"></i> Khớp máy: @Model.CompatibleDeviceCode
+                        </span>
+                    }
+                    <span class="badge bg-light text-secondary border fs-6 px-3 py-2">
+                        <i class="fa fa-tag me-1"></i> Danh mục: @Model.Category?.Name
+                    </span>
+                </div>
+
+                <div class="price-box">
+                    <span class="current-price">@Model.Price.ToString("N0")₫</span>
+                </div>
+
+                <div class="mb-4">
+                    <h5 class="fw-bold"><i class="fas fa-info-circle text-danger"></i> Đặc điểm nổi bật</h5>
+                    <div class="description-content">
+                        @Model.Description
+                    </div>
+                </div>
+
+                <div class="d-flex gap-3 btn-action-group">
+
+                    <form asp-controller="ShoppingCart" asp-action="BuyNow" method="post" class="d-flex flex-fill" style="flex: 2;">
+                        <input type="hidden" name="productId" value="@Model.Id" />
+                        <input type="hidden" name="quantity" value="1" />
+                        <button type="submit" class="btn btn-buy-now w-100">
+                            MUA NGAY <br /><small style="font-weight: normal; font-size: 10px;">(Giao tận nơi hoặc nhận tại cửa hàng)</small>
+                        </button>
+                    </form>
+
+                    <button type="button" 
+                            class="btn btn-add-cart w-100"
+                            data-product-id="@Model.Id"
+                            data-quantity="1"
+                            style="flex: 1;">
+                        <i class="fas fa-cart-plus"></i> <br /><small style="font-weight: normal; font-size: 10px;">Thêm giỏ hàng</small>
+                    </button>
+
+                </div>
+
+                <!-- Nút Thử ốp lưng 3D / Phòng 3D -->
+                <div class="mt-3">
+                    @if (Model.ProductCode.StartsWith("OL") || Model.Category?.Name?.Contains("Ốp") == true || Model.Name.Contains("Ốp"))
+                    {
+                        <button type="button" class="btn btn-warning w-100 fw-bold py-3 text-dark shadow-sm d-flex align-items-center justify-content-center gap-2" id="btnLaunch3DStudio">
+                            <i class="fa fa-cube fs-4"></i>
+                            <span>THỬ ỐP LƯNG 3D TRÊN MÁY BẠN</span>
+                        </button>
+                    }
+                    else if (Model.ProductCode.StartsWith("IP") || Model.ProductCode.StartsWith("SS") || Model.Category?.Name?.Contains("Điện thoại") == true || Model.Name.Contains("iPhone") || Model.Name.Contains("Samsung"))
+                    {
+                        <a href="/TryOn3D/Studio?deviceSlug=@catalogPhoneSlug&productId=@Model.Id" 
+                           class="btn btn-warning w-100 fw-bold py-3 text-dark shadow-sm d-flex align-items-center justify-content-center gap-2 text-decoration-none">
+                            <i class="fa fa-cube fs-4"></i>
+                            <span>XEM MÔ HÌNH 3D & THỬ ỐP LƯNG CHO MÁY NÀY</span>
+                        </a>
+                    }
+                </div>
+
+                <div class="mt-4 pt-3 border-top">
+                    <a asp-action="Index" class="text-decoration-none text-muted">
+                        <i class="fas fa-arrow-left"></i> Quay lại danh sách
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL CHỤP ẢNH NHẬN DIỆN MÁY BẰNG AI (YOLO) -->
+<div class="modal fade" id="cameraDetectionModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+            <div class="modal-header bg-dark text-white border-0">
+                <h5 class="modal-title fw-bold">
+                    <i class="fa fa-robot text-warning me-2"></i>AI Nhận diện dòng máy
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" onclick="stopCameraStream()"></button>
+            </div>
+            
+            <div class="modal-body p-0 position-relative bg-black" style="min-height: 380px;">
+                <video id="webcamVideo" autoplay playsinline muted style="width: 100%; height: 380px; object-fit: cover;"></video>
+                <canvas id="detectionCanvas" class="position-absolute top-0 start-0 w-100 h-100" style="display: none;"></canvas>
+
+                <!-- Khung ngắm ảo căn chỉnh điện thoại -->
+                <div id="cameraGuideOverlay" class="position-absolute top-50 start-50 translate-middle text-center" style="pointer-events: none;">
+                    <div style="width: 210px; height: 310px; border: 2px dashed #00ffcc; border-radius: 24px; box-shadow: 0 0 0 9999px rgba(0,0,0,0.5);"></div>
+                    <span class="badge bg-dark bg-opacity-75 text-white mt-2 px-3 py-1">Căn cụm camera & mặt lưng vào đây</span>
+                </div>
+
+                <!-- Radar scan animation -->
+                <div id="scanningEffect" class="position-absolute top-0 start-0 w-100 h-100 d-none" style="background: rgba(0,0,0,0.6);">
+                    <div class="d-flex flex-column justify-content-center align-items-center h-100 text-white">
+                        <div class="spinner-grow text-warning mb-3" role="status"></div>
+                        <h6 class="fw-bold">YOLO đang quét cụm camera & logo...</h6>
+                    </div>
+                </div>
+                <div id="detectionStatus" class="position-absolute bottom-0 start-0 end-0 p-2 text-center text-warning small" role="status"></div>
+            </div>
+
+            <div class="modal-footer bg-light border-0 d-flex justify-content-between">
+                <label for="fallbackFileInput" class="btn btn-outline-secondary btn-sm">
+                    <i class="fa fa-upload me-1"></i> Tải ảnh từ thư viện
+                </label>
+                <input type="file" id="fallbackFileInput" accept="image/*" class="d-none" />
+
+                <button type="button" id="btnSnapPhoto" class="btn btn-danger px-4 fw-bold">
+                    <i class="fa fa-camera me-1"></i> Chụp ảnh
+                </button>
+                <div class="w-100 d-flex gap-2">
+                    <select id="deviceModelSelect" class="form-select">
+                        <option value="iphone-x">iPhone X</option>
+                        <option value="iphone-16-pro-max">iPhone 16 Pro Max</option>
+                    </select>
+                    <button type="button" id="btnUseSelectedModel" class="btn btn-warning text-nowrap">Dùng model 3D này</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function changeImage(src, element) {
+        // Thay đổi ảnh chính
+        document.getElementById('mainImage').src = src;
+
+        // Cập nhật trạng thái Active cho thumbnail
+        const thumbs = document.querySelectorAll('.thumb-item');
+        thumbs.forEach(t => t.classList.remove('active'));
+        element.classList.add('active');
+    }
+
+    // Handle Add to Cart button click with AJAX
+    document.querySelector('.btn-add-cart').addEventListener('click', async function(e) {
+        e.preventDefault();
+        
+        const productId = this.getAttribute('data-product-id');
+        const quantity = this.getAttribute('data-quantity');
+        const btn = this;
+        
+        // Disable button during request
+        const originalHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> <br /><small style="font-weight: normal; font-size: 10px;">Đang thêm...</small>';
+        
+        try {
+            const response = await fetch(`/ShoppingCart/AddToCart?productId=${productId}&quantity=${quantity}`, {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                
+                // Update cart count badge in header
+                const cartCountBadge = document.getElementById('cart-count');
+                if (cartCountBadge && data.cartCount !== undefined) {
+                    cartCountBadge.textContent = data.cartCount;
+                }
+                
+                // Show success alert
+                alert(data.message);
+            } else {
+                alert('Có lỗi xảy ra. Vui lòng thử lại.');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Có lỗi xảy ra. Vui lòng thử lại.');
+        } finally {
+            // Re-enable button
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+        }
+    });
+
+    // ================= XỬ LÝ PHÒNG THỬ ỐP LƯNG 3D =================
+    let currentStream = null;
+    const currentProductId = '@Model.Id';
+
+    document.getElementById('btnLaunch3DStudio').addEventListener('click', function() {
+        const compatibleDevice = '@compatibleDeviceSlug';
+        if (compatibleDevice) {
+            window.location.href = `/TryOn3D/Studio?productId=${currentProductId}&deviceSlug=${compatibleDevice}`;
+            return;
+        }
+
+        const savedDevice = localStorage.getItem('user_device_model');
+        if (savedDevice) {
+            window.location.href = `/TryOn3D/Studio?productId=${currentProductId}&deviceSlug=${savedDevice}`;
+        } else {
+            const modal = new bootstrap.Modal(document.getElementById('cameraDetectionModal'));
+            modal.show();
+            startWebcam();
+        }
+    });
+
+    async function startWebcam() {
+        try {
+            try {
+                currentStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } },
+                    audio: false
+                });
+            } catch (e) {
+                // Fallback cho webcam laptop / máy tính bàn
+                currentStream = await navigator.mediaDevices.getUserMedia({
+                    video: { width: { ideal: 1280 }, height: { ideal: 720 } },
+                    audio: false
+                });
+            }
+            const video = document.getElementById('webcamVideo');
+            video.srcObject = currentStream;
+            await video.play();
+            document.getElementById('btnSnapPhoto').disabled = false;
+            document.getElementById('detectionStatus').textContent = 'Camera sẵn sàng. Căn mặt sau điện thoại vào khung rồi bấm "Chụp & Nhận diện".';
+        } catch (err) {
+            document.getElementById('btnSnapPhoto').disabled = true;
+            document.getElementById('detectionStatus').textContent =
+                'Không mở được camera. Hãy cho phép quyền camera hoặc tải ảnh từ máy lên.';
+            console.error('Không mở được webcam:', err);
+        }
+    }
+
+    function stopCameraStream() {
+        if (currentStream) {
+            currentStream.getTracks().forEach(t => t.stop());
+            currentStream = null;
+        }
+    }
+
+    document.getElementById('btnSnapPhoto').addEventListener('click', function() {
+        const video = document.getElementById('webcamVideo');
+        if (!currentStream || !video.videoWidth || !video.videoHeight) {
+            document.getElementById('detectionStatus').textContent = 'Camera chưa sẵn sàng. Hãy chờ hình ảnh hiện lên hoặc tải ảnh lên.';
+            return;
+        }
+        const canvas = document.getElementById('detectionCanvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        canvas.style.display = 'block';
+        document.getElementById('cameraGuideOverlay').classList.add('d-none');
+        document.getElementById('scanningEffect').classList.remove('d-none');
+
+        canvas.toBlob(blob => {
+            if (!blob) {
+                document.getElementById('scanningEffect').classList.add('d-none');
+                document.getElementById('detectionStatus').textContent = 'Không tạo được ảnh chụp. Hãy thử lại.';
+                return;
+            }
+            processDeviceDetection(blob, canvas, ctx);
+        }, 'image/jpeg', 0.85);
+    });
+
+    document.getElementById('fallbackFileInput').addEventListener('change', function(e) {
+        if (e.target.files.length > 0) {
+            const file = e.target.files[0];
+            const canvas = document.getElementById('detectionCanvas');
+            const ctx = canvas.getContext('2d');
+            const img = new Image();
+            img.onload = function() {
+                canvas.width = img.width;
+                canvas.height = img.height;
+                ctx.drawImage(img, 0, 0);
+                canvas.style.display = 'block';
+                document.getElementById('cameraGuideOverlay').classList.add('d-none');
+                document.getElementById('scanningEffect').classList.remove('d-none');
+                processDeviceDetection(file, canvas, ctx);
+            };
+            img.src = URL.createObjectURL(file);
+        }
+    });
+
+    async function processDeviceDetection(imageSource, canvas, ctx) {
+        document.getElementById('detectionStatus').textContent = 'Đang gửi ảnh lên AI để phát hiện điện thoại...';
+        const formData = new FormData();
+        formData.append('file', imageSource, 'device.jpg');
+
+        try {
+            const response = await fetch('/TryOn3D/DetectPhoneModel', {
+                method: 'POST',
+                body: formData
+            });
+            const res = await response.json();
+            document.getElementById('scanningEffect').classList.add('d-none');
+
+            if (res.success && res.phone_detected) {
+                const targetModel = res.phone_model_id || 'iphone-x';
+                const targetName = res.phone_model_name || (targetModel === 'iphone-x' ? 'iPhone X' : 'iPhone 16 Pro Max');
+                const confPercent = Math.round((res.confidence || 0.95) * 100);
+
+                // Vẽ Bounding box phản hồi thị giác
+                if (res.bbox && res.bbox.length === 4) {
+                    const [x1, y1, x2, y2] = res.bbox;
+                    ctx.strokeStyle = '#00ffcc';
+                    ctx.lineWidth = 5;
+                    ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
+
+                    ctx.fillStyle = '#00ffcc';
+                    ctx.font = 'bold 22px Arial';
+                    ctx.fillText(`${targetName} (${confPercent}%)`, x1 + 5, y1 > 30 ? y1 - 10 : y1 + 30);
+                }
+
+                document.getElementById('detectionStatus').textContent = `AI đã nhận diện: ${targetName} (${confPercent}%). Đang chuyển vào Studio...`;
+                localStorage.setItem('user_device_model', targetModel);
+
+                // Chờ 1 giây để người dùng thấy kết quả nhận diện rồi điều hướng
+                setTimeout(() => {
+                    stopCameraStream();
+                    window.location.href = `/TryOn3D/Studio?productId=${currentProductId}&deviceSlug=${targetModel}`;
+                }, 1000);
+            } else {
+                document.getElementById('detectionStatus').textContent =
+                    res.message || `Không nhận diện được (${response.status}). Hãy thử ảnh khác hoặc chọn model thủ công.`;
+            }
+        } catch(e) {
+            document.getElementById('detectionStatus').textContent = `Lỗi kết nối AI: ${e.message}`;
+            console.error('Lỗi kết nối nhận diện AI:', e);
+            document.getElementById('scanningEffect').classList.add('d-none');
+        }
+    }
+
+    document.getElementById('btnUseSelectedModel').addEventListener('click', function() {
+        stopCameraStream();
+        const modelSlug = document.getElementById('deviceModelSelect').value;
+        localStorage.setItem('user_device_model', modelSlug);
+        window.location.href = `/TryOn3D/Studio?productId=${currentProductId}&deviceSlug=${modelSlug}`;
+    });
+</script>

@@ -1,0 +1,142 @@
+﻿@model Order
+
+@{
+    ViewData["Title"] = "Thanh toán";
+    // ViewBag.CartTotal should be set in the controller
+}
+
+<style>
+    .checkout-container {
+        background: #fff;
+        border-radius: 18px;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+        padding: 32px 18px;
+        margin-top: 32px;
+        margin-bottom: 32px;
+        max-width: 900px;
+    }
+    .order-summary-box {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 24px 18px;
+        margin-bottom: 24px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    .order-summary-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-bottom: 18px;
+    }
+    .order-summary-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        font-size: 1rem;
+    }
+    .order-summary-total {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #d70018;
+        margin-top: 12px;
+    }
+    .payment-methods {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+    .payment-radio {
+        display: none;
+    }
+    .payment-label {
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+        padding: 12px 18px;
+        cursor: pointer;
+        background: #fafbfc;
+        transition: border 0.2s, background 0.2s;
+        min-width: 160px;
+        text-align: center;
+        font-weight: 500;
+        color: #333;
+    }
+    .payment-radio:checked + .payment-label {
+        border: 2px solid #0d6efd;
+        background: #eaf1ff;
+        color: #0d6efd;
+    }
+    
+</style>
+
+<div class="container d-flex justify-content-center align-items-start">
+    <div class="checkout-container w-100">
+        <div class="row g-4">
+            <!-- Order Summary (left on desktop, top on mobile) -->
+            <div class="col-lg-5 order-lg-2 mb-4 mb-lg-0">
+                <div class="order-summary-box">
+                    <div class="order-summary-title"><i class="fa-solid fa-receipt me-2"></i>Thông tin đơn hàng</div>
+                    <div class="order-summary-row">
+                        <span>Ngày đặt:</span>
+                        <span>@DateTime.Now.ToString("dd/MM/yyyy")</span>
+                    </div>
+                    <div class="order-summary-row">
+                        <span>Phí vận chuyển:</span>
+                        <span>Miễn phí</span>
+                    </div>
+                    <div class="order-summary-total">
+                        <span>Tổng tiền:</span>
+                        <span>@ViewBag.CartTotal₫</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Checkout Form (right on desktop, bottom on mobile) -->
+            <div class="col-lg-7 order-lg-1">
+                <h3 class="fw-bold mb-3"><i class="fa-solid fa-credit-card me-2"></i>Thanh toán đơn hàng</h3>
+                    <form asp-action="Checkout" method="post" autocomplete="off">
+                        
+
+                        <div asp-validation-summary="All" class="text-danger"></div>
+                    <!-- Địa chỉ giao hàng -->
+                    <div class="mb-3">
+                        <label asp-for="ShippingAddress" class="form-label fw-semibold">
+                            <i class="fa-solid fa-location-dot me-1"></i>Địa chỉ giao hàng
+                        </label>
+                        <input asp-for="ShippingAddress" class="form-control form-control-lg" placeholder="Nhập địa chỉ của bạn..." />
+                        <span asp-validation-for="ShippingAddress" class="text-danger"></span>
+                    </div>
+                    <!-- Ghi chú -->
+                    <div class="mb-3">
+                        <label asp-for="Notes" class="form-label fw-semibold">
+                            <i class="fa-solid fa-pen-to-square me-1"></i>Ghi chú
+                        </label>
+                        <textarea asp-for="Notes" class="form-control form-control-lg" rows="2" placeholder="Ghi chú thêm (nếu có)..."></textarea>
+                    </div>
+                    <!-- Payment Method -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold mb-2"><i class="fa-solid fa-money-check-dollar me-1"></i>Phương thức thanh toán</label>
+                        <div class="payment-methods">
+                            <input type="radio" id="pm-cod" name="PaymentMethod" value="COD" class="payment-radio" checked />
+                            <label for="pm-cod" class="payment-label"><i class="fa-solid fa-truck me-1"></i> Thanh Toán Khi Giao Hàng</label>
+                            <input type="radio" id="pm-momo" name="PaymentMethod" value="MOMO" class="payment-radio" />
+                            <label for="pm-momo" class="payment-label"><i class="fa-solid fa-mobile me-1"></i> Ví MoMo</label>
+                            <input type="radio" id="pm-bank" name="PaymentMethod" value="BANK" class="payment-radio" />
+                            <label for="pm-bank" class="payment-label"><i class="fa-solid fa-building-columns me-1"></i> Ngân hàng</label>
+                        </div>
+                    </div>
+                    <!-- Buttons -->
+                    <div class="d-flex justify-content-between align-items-center mt-4 flex-wrap gap-2">
+                        <a asp-controller="ShoppingCart" asp-action="Index" class="btn btn-outline-secondary btn-lg px-4">
+                            ← Quay lại giỏ hàng
+                        </a>
+                        <button type="submit" class="btn btn-success btn-lg px-5 shadow-sm">
+                            <i class="fa-solid fa-credit-card me-1"></i> Đặt hàng
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

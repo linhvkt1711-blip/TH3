@@ -1,0 +1,143 @@
+@model TH3.Models.Product
+@using Microsoft.AspNetCore.Mvc.Rendering
+@{
+    ViewData["Title"] = "Thêm sản phẩm mới";
+}
+
+<style>
+    .preview-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 10px;
+    }
+
+    .preview-item {
+        width: 100px;
+        height: 100px;
+        object-fit: cover;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 2px;
+    }
+</style>
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow border-0">
+                <div class="card-header bg-danger text-white py-3">
+                    <h4 class="mb-0 fw-bold"><i class="fas fa-plus-circle"></i> THÊM SẢN PHẨM MỚI</h4>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="Add" method="post" enctype="multipart/form-data">
+                        <div class="form-group mb-3">
+                            <label asp-for="Name" class="fw-bold mb-1">Tên sản phẩm</label>
+                            <input asp-for="Name" class="form-control" placeholder="Ví dụ: iPhone 15 Pro Max" />
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Price" class="fw-bold mb-1">Giá bán (VNĐ)</label>
+                                <input asp-for="Price" class="form-control" type="number" />
+                                <span asp-validation-for="Price" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="CategoryId" class="fw-bold mb-1">Danh mục</label>
+                                <select asp-for="CategoryId" asp-items="ViewBag.Categories" class="form-select"></select>
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="Description" class="fw-bold mb-1">Mô tả sản phẩm</label>
+                            <textarea asp-for="Description" class="form-control" rows="3" placeholder="Mô tả ngắn về sản phẩm..."></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="CompatibleDeviceCode" class="fw-bold mb-1">Dòng điện thoại tương thích</label>
+                                <select asp-for="CompatibleDeviceCode" class="form-select">
+                                    <option value="">Tất cả / Chưa xác định</option>
+                                    <option value="IP01">iPhone 15 Pro (IP01)</option>
+                                    <option value="IP02">iPhone 15 Pro Max (IP02)</option>
+                                    <option value="IP05">iPhone 16 Pro Max (IP05)</option>
+                                    <option value="IP06">iPhone 16 Pro (IP06)</option>
+                                    <option value="IPX01">iPhone X (IPX01)</option>
+                                    <option value="SS01">Samsung S24 Ultra (SS01)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="MaterialType" class="fw-bold mb-1">Chất liệu ốp 3D</label>
+                                <select asp-for="MaterialType" class="form-select">
+                                    <option value="Clear">Trong suốt</option>
+                                    <option value="Silicone">Silicone / Nhựa màu</option>
+                                    <option value="Leather">Da</option>
+                                    <option value="Hard">Nhựa cứng</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="alert alert-info py-2">
+                            <i class="fas fa-cube me-1"></i> Với sản phẩm ốp lưng, ảnh chính sẽ được lưu và dùng làm hoa văn (texture) trên mô hình ốp 3D. Hệ thống tự tạo hình ốp theo kích thước điện thoại đang chọn.
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="fw-bold mb-1 text-primary">Ảnh chính (Thumbnail)</label>
+                                <input type="file" name="ImageUrl" class="form-control" id="mainImageInput" accept="image/*" />
+                                <div id="mainPreviewContainer" class="mt-2">
+                                    <img id="mainImagePreview" src="#" alt="Main Preview" class="preview-item" style="display:none;" />
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="fw-bold mb-1 text-success">Ảnh phụ (Chọn nhiều ảnh)</label>
+                                <input type="file" name="SubImages" class="form-control" id="subImagesInput" accept="image/*" multiple />
+                                <div id="subPreviewContainer" class="preview-container"></div>
+                                <small class="text-muted">Giữ Ctrl để chọn nhiều ảnh phụ.</small>
+                            </div>
+                        </div>
+
+                        <hr />
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-danger px-5 py-2 fw-bold">LƯU SẢN PHẨM✔</button>
+                            <a asp-action="Index" class="btn btn-outline-secondary px-4 py-2">Hủy bỏ</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Preview ảnh chính
+    document.getElementById('mainImageInput').addEventListener('change', function (event) {
+        const reader = new FileReader();
+        reader.onload = function () {
+            const output = document.getElementById('mainImagePreview');
+            output.src = reader.result;
+            output.style.display = 'block';
+        };
+        reader.readAsDataURL(event.target.files[0]);
+    });
+
+    // Preview nhiều ảnh phụ
+    document.getElementById('subImagesInput').addEventListener('change', function (event) {
+        const container = document.getElementById('subPreviewContainer');
+        container.innerHTML = ''; // Xóa preview cũ
+        const files = event.target.files;
+
+        for (let i = 0; i < files.length; i++) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.classList.add('preview-item');
+                container.appendChild(img);
+            };
+            reader.readAsDataURL(files[i]);
+        }
+    });
+</script>

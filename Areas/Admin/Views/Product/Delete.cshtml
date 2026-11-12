@@ -1,0 +1,80 @@
+﻿@model TH3.Models.Product
+
+@{
+    ViewData["Title"] = "Xác nhận xóa sản phẩm";
+}
+
+<style>
+    .delete-container {
+        max-width: 600px;
+        margin: 50px auto;
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        background: #fff;
+    }
+
+    .product-preview {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+
+        .product-preview img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+
+    .warning-text {
+        color: #d70018;
+        font-weight: bold;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+</style>
+
+<div class="container">
+    <div class="delete-container">
+        <h3 class="text-center fw-bold mb-4">XÁC NHẬN XÓA</h3>
+
+        <div class="warning-text">
+            <i class="fas fa-exclamation-triangle"></i>
+            Hành động này không thể hoàn tác. Bạn có chắc chắn muốn xóa sản phẩm này?
+        </div>
+
+        <div class="product-preview">
+            @if (!string.IsNullOrEmpty(Model.ImageUrl))
+            {
+                <img src="@Model.ImageUrl" alt="@Model.Name" />
+            }
+            else
+            {
+                <img src="/images/no-image.png" alt="No Image" />
+            }
+            <div>
+                <h5 class="mb-1 fw-bold">@Model.Name</h5>
+                <p class="mb-0 text-danger fw-bold">@Model.Price.ToString("N0")₫</p>
+                <small class="text-muted">Danh mục: @(Model.Category?.Name ?? "N/A")</small>
+            </div>
+        </div>
+
+        <form asp-action="Delete" method="post">
+            <input type="hidden" asp-for="Id" />
+            <div class="d-flex gap-3">
+                <a asp-action="Index" class="btn btn-secondary w-50 py-2 fw-bold">
+                    HỦY BỎ
+                </a>
+                <button type="submit" class="btn btn-danger w-50 py-2 fw-bold shadow-sm">
+                    XÁC NHẬN XÓA
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

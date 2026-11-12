@@ -1,0 +1,57 @@
+﻿/* Làm cho card sản phẩm có bo góc tròn hơn và bóng đổ nhẹ */
+.product-card {
+    border: 1px solid #f0f0f0;
+    border-radius: 12px;
+    padding: 10px;
+    background: #fff;
+    transition: all 0.3s ease;
+}
+
+    .product-card:hover {
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        transform: translateY(-3px);
+    }
+
+.product-price {
+    color: #d70018;
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+/* Cart thumbnail image styling */
+.cart-thumb {
+    width: 56px;
+    height: 56px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid #eee;
+    background: #fafafa;
+}
+@media (max-width: 600px) {
+    .cart-thumb {
+        width: 40px;
+        height: 40px;
+    }
+}
+
+/* Cart quantity buttons */
+.table .btn-outline-secondary {
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+@media (max-width: 600px) {
+    .table .btn-outline-secondary {
+        width: 28px;
+        height: 28px;
+    }
+    .badge.bg-primary {
+        font-size: 1rem;
+        padding-left: 0.7em;
+        padding-right: 0.7em;
+    }
+}

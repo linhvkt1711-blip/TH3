@@ -1,0 +1,87 @@
+﻿@model IEnumerable<TH3.Models.Order>
+
+<div class="container mt-4">
+    <h2 class="mb-4">📦 Lịch sử mua hàng</h2>
+
+    @if (TempData["Info"] != null)
+    {
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
+            <i class="fa-solid fa-info-circle me-2"></i>
+            @TempData["Info"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <table class="table table-bordered table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Mã đơn</th>
+                <th>Ngày đặt</th>
+                <th>Tổng tiền</th>
+                <th>Trạng thái</th>
+                <th>Thao tác</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>#@item.Id</td>
+
+                    <td>
+                        @item.OrderDate.ToString("dd/MM/yyyy HH:mm")
+                    </td>
+
+                    <td class="text-danger fw-bold">
+                        @item.TotalPrice.ToString("N0") đ
+                    </td>
+
+                    <td>
+                        @if (item.OrderStatus == "PENDING_APPROVAL")
+                        {
+                            <span class="badge bg-warning text-dark">Chờ duyệt</span>
+                        }
+                        else if (item.OrderStatus == "APPROVED")
+                        {
+                            <span class="badge bg-success">Đã duyệt</span>
+                        }
+                        else if (item.OrderStatus == "REJECTED")
+                        {
+                            <span class="badge bg-danger">Đã từ chối</span>
+                        }
+                        else if (item.OrderStatus == "CANCELLED")
+                        {
+                            <span class="badge bg-secondary">Đã hủy</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">@item.OrderStatus</span>
+                        }
+                    </td>
+
+                    <td class="d-flex gap-2">
+                        <a asp-controller="Order"
+                           asp-action="Details"
+                           asp-route-id="@item.Id"
+                           class="btn btn-sm btn-info text-white">
+                            Xem
+                        </a>
+
+                        @if (item.OrderStatus == "PENDING_APPROVAL")
+                        {
+                            <form asp-action="Cancel" asp-controller="Order" asp-route-id="@item.Id" method="post" onsubmit="return confirm('Bạn thật sự muốn hủy đơn #'+@item.Id+'?');" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <button class="btn btn-sm btn-danger">Hủy</button>
+                            </form>
+                        }
+                        else if (item.OrderStatus == "CANCELLED")
+                        {
+                            <span class="badge bg-secondary">Đã hủy</span>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

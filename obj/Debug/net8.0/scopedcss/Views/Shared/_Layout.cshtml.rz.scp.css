@@ -1,0 +1,82 @@
+/* ====== NAVBAR ====== */
+
+.navbar[b-7n1xjbonvr] {
+    background: linear-gradient(90deg,#0d6efd,#0a58ca);
+}
+
+    .navbar .nav-link[b-7n1xjbonvr] {
+        color: black;
+        font-weight: 500;
+    }
+
+        .navbar .nav-link:hover[b-7n1xjbonvr] {
+            color: #dbe9ff;
+        }
+
+/* ====== DROPDOWN DANH MỤC ====== */
+
+.category-menu[b-7n1xjbonvr] {
+    min-width: 220px;
+    border-radius: 10px;
+}
+
+    .category-menu .dropdown-item[b-7n1xjbonvr] {
+        transition: all 0.2s;
+        border-radius: 6px;
+    }
+
+        .category-menu .dropdown-item:hover[b-7n1xjbonvr] {
+            background-color: blue;
+            color: #0d6efd;
+            padding-left: 18px;
+        }
+
+/* ====== LINK ====== */
+
+a[b-7n1xjbonvr] {
+    color: #0d6efd;
+}
+
+    a:hover[b-7n1xjbonvr] {
+        color: #0d6efd;
+    }
+
+/* ====== BUTTON ====== */
+
+.btn-primary[b-7n1xjbonvr] {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+    .btn-primary:hover[b-7n1xjbonvr] {
+        background-color: #0a58ca;
+        border-color: #0a58ca;
+    }
+
+/* ====== BORDER ====== */
+
+.border-top[b-7n1xjbonvr] {
+    border-top: 1px solid #e5e5e5;
+}
+
+.border-bottom[b-7n1xjbonvr] {
+    border-bottom: 1px solid #e5e5e5;
+}
+
+/* ====== BOX SHADOW ====== */
+
+.box-shadow[b-7n1xjbonvr] {
+    box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .08);
+}
+
+/* ====== FOOTER ====== */
+
+.footer[b-7n1xjbonvr] {
+    background-color: #0d6efd;
+    color: white;
+    position: relative;
+    bottom: 0;
+    width: 100%;
+    line-height: 60px;
+    text-align: center;
+}

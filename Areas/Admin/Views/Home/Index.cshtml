@@ -1,0 +1,187 @@
+﻿@model IEnumerable<TH3.Models.Product>
+@{
+    ViewData["Title"] = "Trang chủ - Tech Store";
+}
+
+<style>
+    /* ===== DANH MỤC ===== */
+
+    .cate-item {
+        background: white;
+        border-radius: 12px;
+        padding: 15px;
+        text-align: center;
+        transition: 0.3s;
+        text-decoration: none;
+        color: #333;
+        display: block;
+        border: 1px solid #eee;
+    }
+
+        .cate-item:hover {
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transform: translateY(-5px);
+            color: #0d6efd;
+            border-color: #0d6efd;
+        }
+
+        .cate-item i {
+            font-size: 30px;
+            margin-bottom: 10px;
+            display: block;
+            color: #0d6efd;
+        }
+
+
+    /* ===== CARD SẢN PHẨM ===== */
+
+    .product-card {
+        background: white;
+        border-radius: 15px;
+        padding: 15px;
+        transition: 0.3s;
+        height: 100%;
+        border: none;
+        position: relative;
+    }
+
+        .product-card:hover {
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            transform: translateY(-3px);
+        }
+
+        .product-card img {
+            width: 100%;
+            height: 180px;
+            object-fit: contain;
+        }
+
+
+    /* ===== GIÁ ===== */
+
+    .product-price {
+        color: #0d6efd;
+        font-weight: bold;
+        font-size: 18px;
+    }
+
+
+    /* ===== TÊN SẢN PHẨM ===== */
+
+    .product-name {
+        font-size: 14px;
+        font-weight: 600;
+        height: 40px;
+        overflow: hidden;
+        margin: 10px 0;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        color: #333;
+    }
+
+
+    /* ===== TAG GIẢM GIÁ ===== */
+
+    .discount-tag {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: #0d6efd;
+        color: white;
+        padding: 2px 8px;
+        border-radius: 5px;
+        font-size: 11px;
+        z-index: 10;
+    }
+
+
+    /* ===== TITLE ===== */
+
+    .section-title {
+        border-left: 5px solid #0d6efd;
+        padding-left: 15px;
+        font-weight: bold;
+    }
+
+</style>
+
+
+<div class="container mt-4">
+    <div class="row g-3 mb-5 text-center">
+        <div class="col-4 col-md-2">
+            <a asp-action="Index" asp-route-searchString="Điện thoại" class="cate-item shadow-sm">
+                <i class="fa-solid fa-mobile-screen"></i>
+                <span>Điện thoại</span>
+            </a>
+        </div>
+        <div class="col-4 col-md-2">
+            <a asp-action="Index" asp-route-searchString="Laptop" class="cate-item shadow-sm">
+                <i class="fa-solid fa-laptop"></i>
+                <span>Laptop</span>
+            </a>
+        </div>
+        <div class="col-4 col-md-2">
+            <a asp-action="Index" asp-route-searchString="Máy tính bảng" class="cate-item shadow-sm">
+                <i class="fa-solid fa-tablet-screen-button"></i>
+                <span>Máy tính bảng</span>
+            </a>
+        </div>
+        <div class="col-4 col-md-2">
+            <a asp-action="Index" asp-route-searchString="Âm thanh" class="cate-item shadow-sm">
+                <i class="fa-solid fa-headphones"></i>
+                <span>Âm thanh</span>
+            </a>
+        </div>
+        <div class="col-4 col-md-2">
+            <a asp-action="Index" asp-route-searchString="Đồng hồ" class="cate-item shadow-sm">
+                <i class="fa-solid fa-clock"></i>
+                <span>Đồng hồ</span>
+            </a>
+        </div>
+        <div class="col-4 col-md-2">
+            <a asp-action="Index" asp-route-searchString="Nhà thông minh" class="cate-item shadow-sm">
+                <i class="fa-solid fa-house"></i>
+                <span>Nhà thông minh</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold m-0" style="border-left: 5px solid #d70018; padding-left: 15px;">SẢN PHẨM NỔI BẬT</h3>
+        <a asp-controller="Product" asp-action="Index" class="text-danger text-decoration-none fw-bold">Xem tất cả ></a>
+    </div>
+
+    <div class="row g-3 mb-5">
+        @if (Model != null && Model.Any())
+        {
+            @foreach (var item in Model)
+            {
+                <div class="col-6 col-md-4 col-lg-3">
+                    <div class="product-card shadow-sm">
+                        <div class="discount-tag">Trả góp 0%</div>
+                        <a asp-controller="Product" asp-action="Display" asp-route-id="@item.Id">
+                            <img src="@item.ImageUrl" alt="@item.Name" />
+                        </a>
+                        <a asp-controller="Product" asp-action="Display" asp-route-id="@item.Id" class="text-decoration-none">
+                            <p class="product-name">@item.Name</p>
+                        </a>
+                        <p class="product-price">@item.Price.ToString("N0")₫</p>
+                        <div class="text-muted small">
+                            <i class="fa fa-star text-warning"></i> 5/5 (100 đánh giá)
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="col-12 text-center py-5">
+                <div class="alert alert-light border shadow-sm">
+                    <p class="text-muted m-0">Không tìm thấy sản phẩm nào phù hợp.</p>
+                    <a asp-action="Index" class="btn btn-sm btn-outline-danger mt-2">Quay lại trang chủ</a>
+                </div>
+            </div>
+        }
+    </div>
+</div>

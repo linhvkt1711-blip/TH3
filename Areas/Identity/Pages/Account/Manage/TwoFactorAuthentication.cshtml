@@ -1,0 +1,105 @@
+@page
+@model TwoFactorAuthenticationModel
+@{
+    ViewData["Title"] = "Xác thực 2 yếu tố (2FA)";
+    ViewData["ActivePage"] = "TwoFactorAuthentication";
+}
+
+<h3 class="fw-bold text-dark mb-4 border-bottom pb-2">
+    <i class="fa-solid fa-shield-halved text-danger me-2"></i>Bảo mật tài khoản (2FA)
+</h3>
+
+@if (!string.IsNullOrEmpty(Model.StatusMessage))
+{
+    var isError = Model.StatusMessage.StartsWith("Lỗi", StringComparison.OrdinalIgnoreCase) || Model.StatusMessage.StartsWith("Error", StringComparison.OrdinalIgnoreCase);
+    var statusMessageClass = isError ? "danger" : "success";
+    var iconClass = isError ? "fa-circle-xmark" : "fa-circle-check";
+    <div class="alert alert-@statusMessageClass alert-dismissible fade show d-flex align-items-center gap-2 rounded-3 border-0 shadow-sm mb-4" role="alert">
+        <i class="fa-solid @iconClass fs-5"></i>
+        <div>@Model.StatusMessage</div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="row animate-fade-in">
+    <div class="col-lg-10">
+        @if (Model.Is2faEnabled)
+        {
+            <div class="card bg-success bg-opacity-10 border border-success border-opacity-25 rounded-3 p-4 mb-4">
+                <div class="d-flex align-items-center gap-3">
+                    <i class="fa-solid fa-circle-check text-success fs-2"></i>
+                    <div>
+                        <h5 class="fw-bold text-success mb-1">Xác thực 2 yếu tố đang BẬT</h5>
+                        <p class="mb-0 text-muted small">Tài khoản của bạn đang được bảo vệ bởi lớp bảo mật bổ sung.</p>
+                    </div>
+                </div>
+            </div>
+
+            if (Model.RecoveryCodesLeft == 0)
+            {
+                <div class="alert alert-danger rounded-3 border-0 shadow-sm d-flex align-items-center gap-2 mb-3">
+                    <i class="fa-solid fa-triangle-exclamation fs-5"></i>
+                    <div>Bạn không còn mã phục hồi nào. Bạn phải tạo mã phục hồi mới trước khi có thể đăng nhập lại bằng mã phục hồi.</div>
+                </div>
+            }
+            else if (Model.RecoveryCodesLeft == 1)
+            {
+                <div class="alert alert-warning rounded-3 border-0 shadow-sm d-flex align-items-center gap-2 mb-3">
+                    <i class="fa-solid fa-circle-exclamation fs-5"></i>
+                    <div>Bạn chỉ còn 1 mã phục hồi duy nhất. Chúng tôi khuyên bạn nên tạo mới mã phục hồi.</div>
+                </div>
+            }
+            else if (Model.RecoveryCodesLeft <= 3)
+            {
+                <div class="alert alert-warning rounded-3 border-0 shadow-sm d-flex align-items-center gap-2 mb-3">
+                    <i class="fa-solid fa-circle-exclamation fs-5"></i>
+                    <div>Bạn còn lại @Model.RecoveryCodesLeft mã phục hồi.</div>
+                </div>
+            }
+
+            if (Model.IsMachineRemembered)
+            {
+                <form method="post" style="display: inline-block">
+                    <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3 py-2 fw-semibold">
+                        <i class="fa-solid fa-laptop-code me-1"></i> Xóa ghi nhớ trình duyệt này
+                    </button>
+                </form>
+            }
+        }
+        else
+        {
+            <div class="card bg-warning bg-opacity-10 border border-warning border-opacity-25 rounded-3 p-4 mb-4">
+                <div class="d-flex align-items-center gap-3">
+                    <i class="fa-solid fa-triangle-exclamation text-warning fs-2"></i>
+                    <div>
+                        <h5 class="fw-bold text-warning mb-1">Xác thực 2 yếu tố đang TẮT</h5>
+                        <p class="mb-0 text-muted small">Kích hoạt xác thực 2 yếu tố giúp ngăn chặn truy cập trái phép vào tài khoản của bạn.</p>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <h5 class="fw-bold text-dark mt-4 mb-3"><i class="fa-solid fa-gears text-danger me-2"></i>Ứng dụng xác thực</h5>
+        <div class="d-flex flex-wrap gap-2">
+            @if (!Model.HasAuthenticator)
+            {
+                <a id="enable-authenticator" asp-page="./EnableAuthenticator" class="btn btn-danger btn-sm rounded-3 px-4 py-2 fw-semibold" style="background: linear-gradient(135deg, #d70018 0%, #af0013 100%); border: none;">
+                    <i class="fa-solid fa-plus-circle me-1"></i> Thiết lập ứng dụng xác thực
+                </a>
+            }
+            else
+            {
+                <a id="enable-authenticator" asp-page="./EnableAuthenticator" class="btn btn-danger btn-sm rounded-3 px-4 py-2 fw-semibold" style="background: linear-gradient(135deg, #d70018 0%, #af0013 100%); border: none;">
+                    <i class="fa-solid fa-arrows-spin me-1"></i> Cấu hình lại ứng dụng
+                </a>
+                <a id="reset-authenticator" asp-page="./ResetAuthenticator" class="btn btn-outline-danger btn-sm rounded-3 px-4 py-2 fw-semibold">
+                    <i class="fa-solid fa-rotate-left me-1"></i> Khởi tạo lại khóa ứng dụng
+                </a>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

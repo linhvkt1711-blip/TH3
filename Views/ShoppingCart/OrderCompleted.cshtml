@@ -1,0 +1,48 @@
+﻿@model int
+
+@{
+    ViewData["Title"] = "Đặt hàng thành công";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+
+            <div class="card shadow-lg border-0 text-center">
+                <div class="card-body py-5">
+
+                    <!-- Icon -->
+                    <div class="mb-4">
+                        <i class="fa-solid fa-circle-check text-success" style="font-size: 60px;"></i>
+                    </div>
+
+                    <!-- Title -->
+                    <h3 class="fw-bold text-success">Đặt hàng thành công!</h3>
+
+                    <!-- Message -->
+                    <p class="text-muted mt-3">
+                        Cảm ơn bạn đã mua hàng tại <strong>Tech Store</strong>.
+                    </p>
+
+                    <p>
+                        Mã đơn hàng của bạn là:
+                        <span class="fw-bold text-danger">#@Model</span>
+                    </p>
+
+                    <!-- Buttons -->
+                    <div class="mt-4">
+                        <a asp-controller="Home" asp-action="Index" class="btn btn-primary me-2">
+                            🛍 Tiếp tục mua hàng
+                        </a>
+
+                        <a asp-controller="Order" asp-action="Index" class="btn btn-outline-secondary">
+                            📦 Xem đơn hàng
+                        </a>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>

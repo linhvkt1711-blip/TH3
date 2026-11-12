@@ -1,0 +1,43 @@
+﻿@model IEnumerable<TH3.Models.Category>
+
+<li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle text-white fw-semibold"
+       href="#"
+       id="navbarDropdown"
+       role="button"
+       data-bs-toggle="dropdown"
+       aria-expanded="false">
+        <i class="fa-solid fa-list me-1"></i>
+        Danh mục
+    </a>
+
+    <ul class="dropdown-menu shadow border-0 py-2 category-menu"
+        aria-labelledby="navbarDropdown">
+
+        <li>
+            <a class="dropdown-item fw-bold py-2"
+               asp-controller="Home"
+               asp-action="Index"
+               asp-route-searchString="">
+                <i class="fa-solid fa-house me-2"></i>
+                Tất cả sản phẩm
+            </a>
+        </li>
+
+        <li><hr class="dropdown-divider"></li>
+
+        @foreach (var item in Model)
+        {
+            <li>
+                <a class="dropdown-item py-2"
+                   asp-controller="Home"
+                   asp-action="Index"
+                   asp-route-searchString="@item.Name">
+                    <i class="fa-solid fa-angle-right me-2"></i>
+                    @item.Name
+                </a>
+            </li>
+        }
+
+    </ul>
+</li>

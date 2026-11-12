@@ -1,0 +1,95 @@
+﻿@{
+    ViewData["Title"] = "Doanh thu";
+}
+
+<h2 class="mb-4"> Doanh thu</h2>
+
+
+<form method="get" class="row mb-4">
+
+    <div class="col-md-3">
+        <label>Từ ngày</label>
+        <input type="date" name="fromDate" class="form-control" />
+    </div>
+
+    <div class="col-md-3">
+        <label>Đến ngày</label>
+        <input type="date" name="toDate" class="form-control" />
+    </div>
+
+    <div class="col-md-3 d-flex align-items-end">
+        <button type="submit" class="btn btn-primary">
+            Lọc
+        </button>
+    </div>
+
+    <div class="col-md-3 d-flex align-items-end">
+        <a href="/ShoppingCart/Revenue" class="btn btn-secondary">
+            Tất cả
+        </a>
+    </div>
+
+</form>
+
+
+@if (ViewBag.TotalRevenue != null)
+{
+    <h4 class="mb-4"> Doanh thu: @ViewBag.TotalRevenue ₫</h4>
+}
+
+
+<div class="row g-3">
+    <div class="col-md-3">
+        <div class="card p-3 shadow-sm">
+            <h6>Hôm nay</h6>
+            <h3 class="text-success">@ViewBag.Today ₫</h3>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card p-3 shadow-sm">
+            <h6>7 ngày</h6>
+            <h3 class="text-primary">@ViewBag.Week ₫</h3>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card p-3 shadow-sm">
+            <h6>Tháng</h6>
+            <h3 class="text-warning">@ViewBag.Month ₫</h3>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card p-3 shadow-sm">
+            <h6>Năm</h6>
+            <h3 class="text-danger">@ViewBag.Year ₫</h3>
+        </div>
+    </div>
+</div>
+
+@if (ViewBag.ProductStats != null)
+{
+    <h4 class="mt-5">📦 Sản phẩm đã bán</h4>
+
+    <table class="table table-bordered table-striped mt-3">
+        <thead class="table-dark">
+            <tr>
+                <th>Tên sản phẩm</th>
+                <th>Số lượng</th>
+                <th>Doanh thu</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var item in ViewBag.ProductStats)
+            {
+                <tr>
+                    <td>@item.ProductName</td>
+                    <td>@item.TotalQuantity</td>
+                    <td>@item.TotalRevenue ₫</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

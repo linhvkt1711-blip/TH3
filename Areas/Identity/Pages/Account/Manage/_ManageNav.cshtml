@@ -1,0 +1,31 @@
+@inject SignInManager<ApplicationUser> SignInManager
+@{
+    var activePage = ViewData["ActivePage"] as string;
+}
+<ul class="nav nav-pills flex-column">
+    <li class="nav-item">
+        <a class="nav-link @(activePage == "Profile" ? "active" : "")" id="profile" href="/Identity/Account/Manage">
+            <i class="fa-solid fa-user-circle fs-5"></i> Hồ sơ cá nhân
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link @(activePage == "Email" ? "active" : "")" id="email" href="/Identity/Account/Manage/Email">
+            <i class="fa-solid fa-envelope fs-5"></i> Địa chỉ Email
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link @(activePage == "ChangePassword" ? "active" : "")" id="change-password" href="/Identity/Account/Manage/ChangePassword">
+            <i class="fa-solid fa-key fs-5"></i> Đổi mật khẩu
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link @(activePage == "TwoFactorAuthentication" ? "active" : "")" id="two-factor" href="/Identity/Account/Manage/TwoFactorAuthentication">
+            <i class="fa-solid fa-shield-halved fs-5"></i> Xác thực 2 yếu tố
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link @(activePage == "PersonalData" ? "active" : "")" id="personal-data" href="/Identity/Account/Manage/PersonalData">
+            <i class="fa-solid fa-database fs-5"></i> Dữ liệu cá nhân
+        </a>
+    </li>
+</ul>

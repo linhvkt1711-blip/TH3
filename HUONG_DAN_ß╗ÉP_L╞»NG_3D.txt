@@ -1,0 +1,18 @@
+TÍNH NĂNG ỐP LƯNG 3D TỰ ĐỘNG
+
+1. Sao lưu database và source trước khi cập nhật.
+2. Mở SQL Server Management Studio, chọn đúng database mà TH3 đang dùng trong appsettings.json.
+3. Chạy file Database/Update_Case3D_Columns.sql.
+4. Mở Visual Studio, build lại solution.
+5. Đăng nhập tài khoản Admin, vào Quản lý sản phẩm > Thêm sản phẩm.
+6. Chọn danh mục Ốp lưng/Case, nhập tên và giá, chọn dòng điện thoại tương thích và chất liệu.
+7. Tải ảnh mặt lưng ốp vào ô Ảnh chính rồi lưu. Ảnh được lưu trong wwwroot/images; đường dẫn được lưu trong Products.CaseTexturePath.
+8. Mở /TryOn3D/Studio. Sản phẩm ốp trong database sẽ xuất hiện trong thanh chọn và ảnh được dùng làm texture trên vỏ ốp 3D.
+
+LƯU Ý QUAN TRỌNG
+- Với nguồn chỉ có một ảnh, website dựng hình học ốp theo kích thước máy (khung viền, mặt lưng, lỗ camera) và dùng ảnh làm texture. Đây không phải quá trình tái tạo hình dạng 3D chính xác từ một ảnh duy nhất. Muốn giống ốp thật ở mọi góc, cần ảnh nhiều góc hoặc file GLB/OBJ được dựng riêng.
+- Đã tích hợp model iPhone X và model ốp iPhone X; chọn mã IPX01 khi thêm ốp dành riêng cho iPhone X. Model ốp 3D được tự động gắn khi Studio chọn iPhone X.
+- Các mã tương thích trong form gồm IP01, IP02, IP05, IP06, IPX01, SS01. Nếu thêm dòng điện thoại mới, bổ sung lựa chọn tương ứng trong Add.cshtml và Update.cshtml.
+- Dữ liệu ốp được lấy trực tiếp từ Products nên thêm sản phẩm mới sẽ tự xuất hiện, không phải thêm thủ công trong JavaScript.
+- YOLO chỉ phân loại được iPhone X nếu file weights/yolo_phone_detect.pt đã được huấn luyện với nhãn iPhone X (ví dụ "iPhone X"). Model YOLO phổ thông chỉ phát hiện điện thoại, không phân biệt chính xác đời máy; khi đó cần weights phân loại đúng nhãn.
+- Nguồn và giấy phép CC BY 4.0 của hai model iPhone X được lưu cạnh file scene.gltf; thông tin ghi công cũng hiển thị trong Studio.

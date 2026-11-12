@@ -1,0 +1,82 @@
+﻿/* ====== NAVBAR ====== */
+
+.navbar {
+    background: linear-gradient(90deg,#0d6efd,#0a58ca);
+}
+
+    .navbar .nav-link {
+        color: black;
+        font-weight: 500;
+    }
+
+        .navbar .nav-link:hover {
+            color: #dbe9ff;
+        }
+
+/* ====== DROPDOWN DANH MỤC ====== */
+
+.category-menu {
+    min-width: 220px;
+    border-radius: 10px;
+}
+
+    .category-menu .dropdown-item {
+        transition: all 0.2s;
+        border-radius: 6px;
+    }
+
+        .category-menu .dropdown-item:hover {
+            background-color: blue;
+            color: #0d6efd;
+            padding-left: 18px;
+        }
+
+/* ====== LINK ====== */
+
+a {
+    color: #0d6efd;
+}
+
+    a:hover {
+        color: #0d6efd;
+    }
+
+/* ====== BUTTON ====== */
+
+.btn-primary {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+    .btn-primary:hover {
+        background-color: #0a58ca;
+        border-color: #0a58ca;
+    }
+
+/* ====== BORDER ====== */
+
+.border-top {
+    border-top: 1px solid #e5e5e5;
+}
+
+.border-bottom {
+    border-bottom: 1px solid #e5e5e5;
+}
+
+/* ====== BOX SHADOW ====== */
+
+.box-shadow {
+    box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .08);
+}
+
+/* ====== FOOTER ====== */
+
+.footer {
+    background-color: #0d6efd;
+    color: white;
+    position: relative;
+    bottom: 0;
+    width: 100%;
+    line-height: 60px;
+    text-align: center;
+}

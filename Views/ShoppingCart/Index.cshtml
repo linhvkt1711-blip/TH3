@@ -1,0 +1,106 @@
+﻿@model ShoppingCart
+
+@{
+    ViewData["Title"] = "Giỏ hàng";
+}
+
+<div class="container mt-4">
+    <h2 class="mb-4 fw-bold">🛒 Giỏ hàng của bạn</h2>
+
+    @if (Model.Items != null && Model.Items.Any())
+    {
+        <div class="card shadow-sm">
+            <div class="card-body">
+
+                <table class="table align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Sản phẩm</th>
+                            <th class="text-center">Số lượng</th>
+                            <th>Giá</th>
+                            <th>Tổng</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var item in Model.Items)
+                        {
+                            <tr>
+                                <td class="fw-semibold d-flex align-items-center gap-2">
+                                    <img src="@item.ImageUrl" alt="@item.Name" style="width:56px;height:56px;object-fit:cover;border-radius:8px;border:1px solid #eee;" class="cart-thumb me-2" />
+                                    <span>@item.Name</span>
+                                </td>
+
+
+                                <td class="text-center">
+                                    <div class="d-flex align-items-center justify-content-center gap-1">
+                                        <form asp-action="DecreaseQuantity" asp-controller="ShoppingCart" method="post" class="d-inline">
+                                            <input type="hidden" name="productId" value="@item.ProductId" />
+                                            <button type="submit" class="btn btn-sm btn-outline-secondary px-2 py-1" style="min-width:32px;">
+                                                <i class="fa fa-minus"></i>
+                                            </button>
+                                        </form>
+                                        <span class="badge bg-primary px-3">@item.Quantity</span>
+                                        <form asp-action="IncreaseQuantity" asp-controller="ShoppingCart" method="post" class="d-inline">
+                                            <input type="hidden" name="productId" value="@item.ProductId" />
+                                            <button type="submit" class="btn btn-sm btn-outline-secondary px-2 py-1" style="min-width:32px;">
+                                                <i class="fa fa-plus"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+
+                                <td class="text-primary fw-bold">
+                                    @item.Price.ToString("N0")₫
+                                </td>
+
+                                <td class="fw-bold text-danger">
+                                    @(item.Price* item.Quantity)₫
+                                </td>
+
+                                <td>
+                                    <a asp-action="RemoveFromCart"
+                                       asp-route-productId="@item.ProductId"
+                                       class="btn btn-sm btn-outline-danger">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+
+                <!-- ✅ Tổng tiền -->
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <h5 class="fw-bold">
+                        Tổng tiền:
+                        <span class="text-danger">
+                            @Model.Items.Sum(i => i.Price * i.Quantity).ToString("N0")₫
+                        </span>
+                    </h5>
+
+                    <div>
+                        <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary me-2">
+                            ← Tiếp tục mua
+                        </a>
+
+                        <a asp-action="Checkout" class="btn btn-success">
+                            Thanh toán
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-5">
+            <h5 class="text-muted">Giỏ hàng trống 😢</h5>
+            <a asp-controller="Home" asp-action="Index" class="btn btn-primary mt-3">
+                Mua ngay
+            </a>
+        </div>
+    }
+</div>

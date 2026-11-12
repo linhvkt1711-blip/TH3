@@ -1,0 +1,113 @@
+﻿@model IEnumerable<TH3.Models.Order>
+
+@{
+    ViewData["Title"] = "Quản lý mua hàng";
+}
+
+<div class="container mt-4">
+    <h2 class="mb-4 fw-bold">Quản lý mua hàng</h2>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["Success"]
+        </div>
+    }
+
+    <table class="table table-bordered">
+        <thead class="table-dark">
+            <tr>
+                <th>Mã</th>
+                <th>Ngày</th>
+                <th>Khách</th>
+                <th>Tổng tiền</th>
+                <th>Trạng thái</th>
+                <th>Thao tác</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>#@item.Id</td>
+                    <td>@item.OrderDate.ToString("dd/MM/yyyy HH:mm")</td>
+                    <td>@item.ApplicationUser?.UserName</td>
+                    <td>@item.TotalPrice.ToString("N0") đ</td>
+
+                    <td>
+                        @if (item.OrderStatus == "PENDING_APPROVAL")
+                        {
+                            <span class="badge bg-warning text-dark">Chờ duyệt</span>
+                        }
+                        else if (item.OrderStatus == "APPROVED")
+                        {
+                            <span class="badge bg-success">Đã duyệt</span>
+                        }
+                        else if (item.OrderStatus == "REJECTED")
+                        {
+                            <span class="badge bg-danger">Đã từ chối</span>
+                        }
+                        else if (item.OrderStatus == "CANCELLED")
+                        {
+                            <span class="badge bg-secondary">Đã hủy</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">@item.OrderStatus</span>
+                        }
+                    </td>
+
+                    <td>
+                        <a asp-action="Details" asp-route-id="@item.Id"
+                           class="btn btn-info btn-sm text-white">
+                            Xem
+                        </a>
+
+                        @if (item.OrderStatus == "PENDING_APPROVAL")
+                        {
+                            <form asp-action="Approve"
+                                  asp-controller="OrderManager"
+                                  method="post"
+                                  class="d-inline me-1"
+                                  onsubmit="return confirm('Duyệt đơn #@item.Id ?');">
+
+                                <input type="hidden" name="id" value="@item.Id" />
+
+                                <button class="btn btn-success btn-sm">
+                                    ✓ Duyệt
+                                </button>
+                            </form>
+
+                            <form asp-action="Reject"
+                                  asp-controller="OrderManager"
+                                  method="post"
+                                  class="d-inline"
+                                  onsubmit="var reason = prompt('Lý do từ chối (tùy chọn):'); if(reason !== null) { this.querySelector('[name=rejectionReason]').value = reason; return true; } return false;">
+
+                                <input type="hidden" name="id" value="@item.Id" />
+                                <input type="hidden" name="rejectionReason" value="" />
+
+                                <button class="btn btn-danger btn-sm">
+                                    ✗ Từ chối
+                                </button>
+                            </form>
+                        }
+                        else if (item.OrderStatus == "APPROVED")
+                        {
+                            <button class="btn btn-secondary btn-sm" disabled>
+                                ✓ Đã duyệt
+                            </button>
+                        }
+                        else if (item.OrderStatus == "REJECTED")
+                        {
+                            <button class="btn btn-secondary btn-sm" disabled>
+                                ✗ Đã từ chối
+                            </button>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

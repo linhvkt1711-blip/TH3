@@ -1,0 +1,725 @@
+@using TH3.Models
+@{
+    Layout = null; // Full-screen immersion
+    var product = ViewBag.CurrentProduct as Product;
+    var phone = ViewBag.PhoneModel as PhoneModel;
+    var relatedCases = ViewBag.RelatedCases as List<Product>;
+    var allCases = ViewBag.AllCases as List<Product> ?? new List<Product>();
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>3D Try-on Studio - @product?.Name</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body, html {
+            width: 100%; height: 100%; overflow: hidden;
+            background: radial-gradient(circle at 48% 46%, #282a30 0%, #17181c 65%, #0b0c0e 100%);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            color: #fff;
+        }
+
+        /* Khung WebGL 3D */
+        #webgl-studio-canvas { width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; z-index: 1; outline: none; }
+
+        /* Glassmorphism Panel */
+        .glass-studio-panel {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            border-radius: 14px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+        }
+
+        /* Top Bar */
+        .top-bar-studio {
+            position: absolute; top: 18px; left: 20px; right: 20px; z-index: 10;
+            display: flex; justify-content: space-between; align-items: center; pointer-events: none;
+        }
+        .top-bar-studio * { pointer-events: auto; }
+
+        /* Side Controls (Màu máy & Khắc chữ) */
+        .side-control-panel {
+            position: absolute; top: 85px; right: 20px; z-index: 10;
+            padding: 14px; width: 185px;
+        }
+        .color-dot {
+            width: 28px; height: 28px; border-radius: 50%; border: 2px solid #fff;
+            cursor: pointer; transition: transform 0.2s, border-color 0.2s; box-shadow: 0 3px 8px rgba(0,0,0,0.4);
+        }
+        .color-dot:hover, .color-dot.active { transform: scale(1.25); border-color: #0d6efd; }
+
+        /* Bottom Carousel Dock */
+        .bottom-dock {
+            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+            width: 92%; max-width: 920px; z-index: 10; display: flex; flex-direction: column; gap: 10px;
+        }
+        .carousel-track {
+            display: flex; gap: 12px; overflow-x: auto; padding: 10px 8px; scrollbar-width: none;
+        }
+        .carousel-track::-webkit-scrollbar { display: none; }
+        .case-thumb-card {
+            min-width: 105px; max-width: 105px; background: rgba(0, 0, 0, 0.45);
+            border: 2px solid transparent; border-radius: 12px; padding: 8px 6px; text-align: center;
+            cursor: pointer; transition: 0.25s; flex-shrink: 0;
+        }
+        .case-thumb-card:hover, .case-thumb-card.active {
+            border-color: #ffc107; background: rgba(255, 193, 7, 0.18); transform: translateY(-3px);
+        }
+        .case-thumb-card .case-preview-icon {
+            width: 48px; height: 58px; margin: 0 auto 6px; border-radius: 8px; display: block;
+            display: flex; align-items: center; justify-content: center; font-size: 22px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2);
+        }
+        .case-thumb-card p { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 0; color: #eee; }
+
+        /* Loading Spinner */
+        #studio-loader {
+            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: #111317; z-index: 100; display: flex; flex-column: column;
+            justify-content: center; align-items: center; gap: 16px; transition: opacity 0.4s;
+        }
+
+        /* Toast HUD */
+        #aiDetectionToast {
+            position: absolute; top: 85px; left: 50%; transform: translateX(-50%);
+            z-index: 30; display: none; animation: fadeInDown 0.3s ease;
+        }
+        @@keyframes fadeInDown {
+            from { opacity: 0; transform: translate(-50%, -20px); }
+            to { opacity: 1; transform: translate(-50%, 0); }
+        }
+    </style>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+</head>
+<body>
+
+    <!-- Loading Overlay -->
+    <div id="studio-loader">
+        <div class="spinner-border text-warning" style="width: 3.5rem; height: 3.5rem;" role="status"></div>
+        <div class="h5 fw-light text-white">Đang tải mô hình 3D Photorealistic & Ghép ốp...</div>
+    </div>
+
+    <!-- AI Notification HUD Toast -->
+    <div id="aiDetectionToast" class="glass-studio-panel px-4 py-2 text-warning fw-bold border-warning align-items-center gap-2 shadow-lg" style="display: none;">
+        <i class="fa fa-robot fs-5"></i>
+        <span id="aiToastMessage">AI nhận diện thiết bị thành công</span>
+    </div>
+
+    <!-- WebGL Canvas -->
+    <div id="webgl-studio-canvas"></div>
+
+    <!-- Top Navigation Bar -->
+    <div class="top-bar-studio">
+        <a href="/Home/Index" class="btn btn-outline-light glass-studio-panel py-2 px-3 text-decoration-none">
+            <i class="fa fa-arrow-left me-1"></i> Trang chủ
+        </a>
+
+        <!-- Thông tin máy và phân loại mã -->
+        <div class="glass-studio-panel py-2 px-4 text-center d-flex align-items-center gap-2">
+            <span class="badge bg-warning text-dark fs-6 fw-bold" id="badgeActiveCaseCode">Mã: @(product?.ProductCode ?? "OL01")</span>
+            <span class="badge bg-primary text-white"><i class="fa fa-mobile-screen me-1"></i> Thiết bị:</span>
+            <strong id="lblDeviceName">@(phone == null ? "Chưa chọn điện thoại" : $"{phone.Name} ({phone.DeviceCode})")</strong>
+            <button class="btn btn-sm btn-outline-warning ms-2 py-0 px-2 fw-bold" onclick="openCameraModal()" title="Quét camera nhận diện máy khác">
+                <i class="fa fa-camera me-1"></i> Quét AI
+            </button>
+        </div>
+
+        <div class="d-flex gap-2">
+            <!-- Nút Tháo / Đeo ốp (Xem máy trần nguyên bản giống y ảnh mẫu) -->
+            <button id="btnToggleCase" class="btn btn-outline-light glass-studio-panel py-2 px-3" onclick="onToggleCaseVisibility()" title="Xem máy trần nguyên bản">
+                <i class="fa fa-eye me-1"></i> <span id="lblCaseVisibility">Gỡ ốp (Máy trần)</span>
+            </button>
+
+            <!-- Nút Tách / Lắp ốp (Exploded View Animation) -->
+            <button id="btnToggleExploded" class="btn btn-outline-light glass-studio-panel py-2 px-3" onclick="onToggleExplodedView()" title="Xem cấu tạo tách rời">
+                <i class="fa fa-layer-group me-1"></i> <span id="lblExploded">Tách ốp</span>
+            </button>
+
+            <!-- Nút Tải ảnh Snapshot 3D -->
+            <button class="btn btn-outline-light glass-studio-panel py-2 px-3" onclick="studio.downloadSnapshot('iPhone15Pro_3D.jpg')" title="Tải ảnh 3D về máy">
+                <i class="fa fa-download me-1"></i> Tải ảnh
+            </button>
+
+            <button class="btn btn-outline-light glass-studio-panel py-2 px-3" onclick="studio.resetCameraView()" title="Góc nhìn chuẩn mặt lưng">
+                <i class="fa fa-rotate-left me-1"></i> Góc chuẩn
+            </button>
+        </div>
+    </div>
+
+    <!-- CỤM NÚT CÔNG CỤ ĐỒ HỌA CHUYÊN NGHIỆP GÓC PHẢI DƯỚI (GIỐNG HÌNH ẢNH MẪU CỦA NGƯỜI DÙNG) -->
+    <div class="position-absolute d-flex gap-2 align-items-center" style="bottom: 25px; right: 25px; z-index: 25;">
+        <button class="btn btn-sm btn-dark text-white rounded-circle shadow border border-secondary" style="width: 36px; height: 36px;" title="Trợ giúp thao tác" onclick="alert('Dùng chuột trái để xoay 360°, cuộn chuột để phóng to/thu nhỏ cụm camera và viền titanium, chuột phải để di chuyển.')">
+            <i class="fa fa-question"></i>
+        </button>
+        <button class="btn btn-sm btn-dark text-white rounded-circle shadow border border-secondary" style="width: 36px; height: 36px;" title="Chất lượng đồ họa HD Photorealistic">
+            <span class="badge bg-info text-dark p-1 fw-bold" style="font-size: 8px;">HD</span>
+        </button>
+        <button class="btn btn-sm btn-dark text-white rounded-circle shadow border border-secondary" style="width: 36px; height: 36px;" title="Tách rời cấu tạo ốp lưng" onclick="onToggleExplodedView()">
+            <i class="fa fa-layer-group"></i>
+        </button>
+        <button class="btn btn-sm btn-dark text-white rounded-circle shadow border border-secondary" style="width: 36px; height: 36px;" title="Chế độ Cardboard VR" onclick="alert('Chế độ xem thực tế ảo VR Cardboard')">
+            <i class="fa fa-vr-cardboard"></i>
+        </button>
+        <button class="btn btn-sm btn-dark text-white rounded-circle shadow border border-secondary" style="width: 36px; height: 36px;" title="Toàn màn hình" onclick="toggleFullScreen()">
+            <i class="fa fa-expand"></i>
+        </button>
+    </div>
+
+    <!-- Side Control Panel: Màu thân máy & Khắc tên -->
+    <div class="side-control-panel glass-studio-panel">
+        <div class="small text-white-50 text-center mb-2 fw-bold">MÀU MÁY TITANIUM</div>
+        <div id="phone-color-dots" class="d-flex justify-content-center gap-2 mb-3"></div>
+        <label for="phoneModelPicker" class="small text-white-50 text-center d-block mb-1">CHỌN MODEL 3D</label>
+        <select id="phoneModelPicker" class="form-select form-select-sm bg-dark text-white border-secondary">
+            <option value="">Chọn model 3D</option>
+            <option value="iphone-x">iPhone X</option>
+            <option value="iphone-15-pro">iPhone 15 Pro</option>
+            <option value="iphone-15-prm">iPhone 15 Pro Max</option>
+            <option value="iphone-16-pro-max">iPhone 16 Pro Max</option>
+        </select>
+        <button type="button" id="btnLoadPhoneModel" class="btn btn-sm btn-warning w-100 mt-2 mb-3">Tải điện thoại vào Studio</button>
+
+        <div class="small text-white-50 text-center mb-2 fw-bold">KHẮC TÊN LÊN ỐP</div>
+        <input type="text" id="txtCustomEngraving" class="form-control form-control-sm bg-dark text-white border-secondary text-center" 
+               placeholder="Nhập tên của bạn..." maxlength="18" />
+        <details class="small text-white-50 mt-3">
+            <summary>Nguồn mô hình iPhone X</summary>
+            <div class="mt-2">
+                Điện thoại: <a href="https://sketchfab.com/3d-models/iphone-x-663d66bb8cf94964959a7b8323193bf9" target="_blank" rel="noopener">Manfred Kostka</a> (CC BY 4.0).
+                Ốp lưng: <a href="https://sketchfab.com/3d-models/i-phone-x-case-7f01501432cf4f3789dc232284829e34" target="_blank" rel="noopener">fuzzy4fox</a> (CC BY 4.0).
+            </div>
+        </details>
+    </div>
+
+    <!-- Bottom Carousel Dock: Thông tin ốp đang thử & Đổi mẫu nhanh -->
+    <div class="bottom-dock">
+        <!-- Thông tin mẫu ốp đang active & nút mua nhanh -->
+        <div class="glass-studio-panel d-flex justify-content-between align-items-center px-4 py-2">
+            <div>
+                <h5 id="dockCaseTitle" class="m-0 fw-bold">@(product?.Name ?? "Ốp Lưng iPhone 15 Pro MagSafe Trong Suốt Chống Ố (OL01)")</h5>
+                <span id="dockCasePrice" class="text-warning fw-bold fs-5">@(product?.Price.ToString("N0") ?? "350,000")₫</span>
+                <span class="badge bg-dark border border-secondary ms-2 text-white-50" id="dockCompatibility">Khớp máy: @(phone?.DeviceCode ?? "IP01")</span>
+            </div>
+            <div class="d-flex gap-2">
+                <button id="btnAddToCartStudio" class="btn btn-outline-light px-3 py-2 fw-bold" data-id="@(product?.Id ?? 1)">
+                    <i class="fa fa-cart-plus me-1"></i> Thêm giỏ
+                </button>
+                <a id="btnBuyNowStudio" href="/ShoppingCart/BuyNow?productId=@(product?.Id ?? 1)&quantity=1" class="btn btn-danger px-4 py-2 fw-bold">
+                    MUA NGAY
+                </a>
+            </div>
+        </div>
+
+        <!-- Carousel danh sách các mẫu ốp lưng khác (0ms switch, không reload) -->
+        <div class="carousel-track glass-studio-panel" id="caseCarousel">
+            @if (allCases.Count > 0)
+            {
+                foreach (var item in allCases)
+                {
+                    var imageUrl = item.CaseTexturePath ?? item.ImageUrl ?? string.Empty;
+                    var isActive = product != null && item.Id == product.Id;
+                    <button type="button" class="case-thumb-card position-relative @(isActive ? "active" : "")"
+                            data-id="@item.Id" data-code="@item.ProductCode" data-title="@item.Name"
+                            data-price="@item.Price.ToString("N0")" data-texture="@imageUrl"
+                            data-material="@item.MaterialType" data-compatible="@(item.CompatibleDeviceCode ?? "")"
+                            data-model="@item.Case3DModelPath"
+                            onclick="onSelectCasePreset(this)">
+                        <span class="badge bg-warning text-dark position-absolute" style="top:4px;right:4px;font-size:8px;">@item.ProductCode</span>
+                        @if (!string.IsNullOrWhiteSpace(imageUrl))
+                        {
+                            <img src="@imageUrl" alt="@item.Name" class="case-preview-icon" style="object-fit:cover;" />
+                        }
+                        else
+                        {
+                            <div class="case-preview-icon" style="background:rgba(255,255,255,.1);color:#ffc107;"><i class="fa fa-mobile"></i></div>
+                        }
+                        <p>@item.Name</p>
+                    </button>
+                }
+            }
+            else
+            {
+                <div class="text-white-50 p-3">Chưa có sản phẩm ốp lưng trong kho. Admin hãy thêm ốp lưng và tải ảnh sản phẩm.</div>
+            }
+        </div>
+    </div>
+
+    <!-- MODAL QUÉT AI YOLO NHẬN DIỆN MÁY -->
+    <div class="modal fade" id="cameraDetectionModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden bg-dark text-white">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title fw-bold">
+                        <i class="fa fa-robot text-warning me-2"></i>AI YOLO Nhận diện thiết bị
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" onclick="stopCameraStream()"></button>
+                </div>
+                
+                <div class="modal-body p-0 position-relative bg-black" style="min-height: 360px;">
+                    <video id="webcamVideo" autoplay playsinline muted style="width: 100%; height: 360px; object-fit: cover;"></video>
+                    <canvas id="detectionCanvas" class="position-absolute top-0 start-0 w-100 h-100" style="display: none;"></canvas>
+
+                    <!-- Khung Bounding Box mô phỏng YOLO -->
+                    <div id="cameraGuideOverlay" class="position-absolute top-50 start-50 translate-middle text-center" style="pointer-events: none;">
+                        <div style="width: 210px; height: 310px; border: 2px dashed #00ffcc; border-radius: 24px; box-shadow: 0 0 0 9999px rgba(0,0,0,0.5);"></div>
+                        <span class="badge bg-dark bg-opacity-75 text-white mt-2 px-3 py-1">Căn cụm camera & mặt lưng vào đây</span>
+                    </div>
+
+                    <!-- Radar scan animation -->
+                    <div id="scanningEffect" class="position-absolute top-0 start-0 w-100 h-100 d-none" style="background: rgba(0,0,0,0.65);">
+                        <div class="d-flex flex-column justify-content-center align-items-center h-100 text-white">
+                            <div class="spinner-grow text-warning mb-3" role="status"></div>
+                            <h6 class="fw-bold">YOLO đang phát hiện Bounding Box & nhận diện dòng máy...</h6>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer border-secondary d-flex justify-content-between">
+                    <label for="fallbackFileInput" class="btn btn-outline-light btn-sm">
+                        <i class="fa fa-upload me-1"></i> Tải ảnh từ máy
+                    </label>
+                    <input type="file" id="fallbackFileInput" accept="image/*" class="d-none" />
+
+                    <button type="button" id="btnSnapPhoto" class="btn btn-danger px-4 fw-bold">
+                        <i class="fa fa-camera me-1"></i> Chụp & Nhận diện
+                    </button>
+                    <div class="w-100 d-flex gap-2">
+                        <select id="detectionPhoneModel" class="form-select bg-dark text-white border-secondary">
+                            <option value="">Chọn model 3D</option>
+                            <option value="iphone-x">iPhone X</option>
+                            <option value="iphone-15-pro">iPhone 15 Pro</option>
+                            <option value="iphone-15-prm">iPhone 15 Pro Max</option>
+                            <option value="iphone-16-pro-max">iPhone 16 Pro Max</option>
+                        </select>
+                        <button type="button" id="btnUseDetectionModel" class="btn btn-warning text-nowrap">Dùng model 3D này</button>
+                    </div>
+                    <div id="studioDetectionStatus" class="w-100 small text-warning" role="status"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module">
+        import { TryOnStudio } from '/js/tryon-studio.js?v=4';
+
+        // 1. Khởi tạo 3D Studio với đồ họa Photorealistic
+        const initialCode = '@(product?.ProductCode ?? "OL01")';
+        const initialCaseModelUrl = '@(product?.Case3DModelPath ?? "")';
+        window.studio = new TryOnStudio('webgl-studio-canvas', {
+            phoneSlug: '@phone?.Slug',
+            phoneName: '@phone?.Name',
+            initialCaseCode: initialCode,
+            initialCaseName: '@product?.Name',
+            initialTextureUrl: '@(product?.CaseTexturePath ?? product?.ImageUrl ?? "")',
+            initialMaterialType: '@(product?.MaterialType ?? "Silicone")',
+            initialCaseModelUrl: '@(product?.Case3DModelPath ?? "")'
+        });
+        window.studio.ready.then(() => {
+            document.getElementById('lblExploded').textContent =
+                window.studio.isExploded ? 'Lắp ốp' : 'Tách ốp';
+        });
+
+        // 2. Render màu thân máy Titanium
+        const phoneColors = @Html.Raw(phone?.AvailableColorsJson ?? "[]");
+        const colorContainer = document.getElementById('phone-color-dots');
+        
+        phoneColors.forEach((color, idx) => {
+            const dot = document.createElement('div');
+            dot.className = `color-dot ${idx === 0 ? 'active' : ''}`;
+            dot.style.backgroundColor = color.hex;
+            dot.title = color.name;
+            dot.onclick = () => {
+                document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
+                dot.classList.add('active');
+                studio.changePhoneColor(color.hex);
+            };
+            colorContainer.appendChild(dot);
+        });
+
+        // 3. Khắc tên lên ốp thời gian thực
+        document.getElementById('txtCustomEngraving').addEventListener('input', function(e) {
+            studio.updateEngraving(e.target.value);
+        });
+
+        // Tách / Lắp ốp lưng (Exploded view animation)
+        window.onToggleExplodedView = function() {
+            const isExploded = studio.toggleExplodedView();
+            const btnLabel = document.getElementById('lblExploded');
+            if (btnLabel) {
+                btnLabel.textContent = isExploded ? 'Lắp ốp' : 'Tách ốp';
+            }
+        };
+
+        // Gỡ ốp / Xem máy trần nguyên bản
+        window.onToggleCaseVisibility = function() {
+            const isVisible = studio.toggleCaseVisibility();
+            const lbl = document.getElementById('lblCaseVisibility');
+            if (lbl) {
+                lbl.textContent = isVisible ? 'Gỡ ốp (Máy trần)' : 'Đeo ốp vào máy';
+            }
+        };
+
+        // 4. Chọn mẫu ốp trên Carousel Dock (Đổi shader/texture tức thì không reload)
+        const preferredProductId = @(product?.Id ?? 0);
+
+        window.onSelectCasePreset = function(elem) {
+            document.querySelectorAll('.case-thumb-card').forEach(c => c.classList.remove('active'));
+            elem.classList.add('active');
+
+            const id = elem.dataset.id;
+            const code = elem.dataset.code || 'OL01';
+            const title = elem.dataset.title || 'Ốp lưng';
+            const price = elem.dataset.price || '0';
+            const textureUrl = elem.dataset.texture || '';
+            const materialType = elem.dataset.material || 'Silicone';
+            const modelUrl = elem.dataset.model || '';
+            const compatibleCode = elem.dataset.compatible || '';
+
+            document.getElementById('badgeActiveCaseCode').textContent = `Mã: ${code}`;
+            document.getElementById('dockCaseTitle').textContent = title;
+            document.getElementById('dockCasePrice').textContent = `${price}₫`;
+            document.getElementById('btnAddToCartStudio').setAttribute('data-id', id);
+            document.getElementById('btnBuyNowStudio').setAttribute('href', `/ShoppingCart/BuyNow?productId=${id}&quantity=1`);
+            document.getElementById('dockCompatibility').textContent = compatibleCode
+                ? `Khớp máy: ${compatibleCode}`
+                : 'Khớp máy: dùng chung';
+
+            studio.setCaseStyle(code, { textureUrl, materialType, modelUrl });
+        };
+
+        async function refreshCompatibleCases(deviceCode, preferredId = preferredProductId) {
+            const response = await fetch(`/TryOn3D/GetCompatibleCases?deviceCode=${encodeURIComponent(deviceCode)}`);
+            if (!response.ok) throw new Error(`Không tải được danh sách ốp tương thích (${response.status}).`);
+
+            const cases = await response.json();
+            const carousel = document.getElementById('caseCarousel');
+            carousel.replaceChildren();
+
+            cases.forEach(item => {
+                const card = document.createElement('button');
+                card.type = 'button';
+                card.className = 'case-thumb-card position-relative';
+                card.dataset.id = item.id;
+                card.dataset.code = item.code || '';
+                card.dataset.title = item.title || 'Ốp lưng';
+                card.dataset.price = new Intl.NumberFormat('vi-VN').format(item.price || 0);
+                card.dataset.texture = item.textureUrl || '';
+                card.dataset.material = item.materialType || 'Silicone';
+                card.dataset.compatible = item.compatibleDeviceCode || deviceCode;
+                card.dataset.model = item.modelUrl || '';
+                card.addEventListener('click', () => window.onSelectCasePreset(card));
+
+                const badge = document.createElement('span');
+                badge.className = 'badge bg-warning text-dark position-absolute';
+                badge.style.cssText = 'top:4px;right:4px;font-size:8px;';
+                badge.textContent = item.code || '';
+                card.appendChild(badge);
+
+                if (item.textureUrl) {
+                    const image = document.createElement('img');
+                    image.src = item.textureUrl;
+                    image.alt = item.title || 'Ốp lưng';
+                    image.className = 'case-preview-icon';
+                    image.style.objectFit = 'cover';
+                    card.appendChild(image);
+                } else {
+                    const icon = document.createElement('div');
+                    icon.className = 'case-preview-icon';
+                    icon.style.cssText = 'background:rgba(255,255,255,.1);color:#ffc107;';
+                    icon.innerHTML = '<i class="fa fa-mobile"></i>';
+                    card.appendChild(icon);
+                }
+
+                const title = document.createElement('p');
+                title.textContent = item.title || 'Ốp lưng';
+                card.appendChild(title);
+                carousel.appendChild(card);
+            });
+
+            if (cases.length) {
+                const selectedCard = Array.from(carousel.children)
+                    .find(card => Number(card.dataset.id) === preferredId)
+                    || carousel.firstElementChild;
+                selectedCard.click();
+            } else {
+                const empty = document.createElement('div');
+                empty.className = 'text-white-50 p-3';
+                empty.textContent = 'Chưa có sản phẩm ốp lưng tương thích trong kho.';
+                carousel.appendChild(empty);
+            }
+        }
+
+        const phoneModels = {
+            'iphone-x': { name: 'iPhone X', code: 'IPX01' },
+            'iphone-15-pro': { name: 'iPhone 15 Pro', code: 'IP01' },
+            'iphone-15-prm': { name: 'iPhone 15 Pro Max', code: 'IP02' },
+            'iphone-16-pro-max': { name: 'iPhone 16 Pro Max', code: 'IP05' }
+        };
+        const initialPhoneSlug = '@(phone?.Slug ?? "")';
+        if (phoneModels[initialPhoneSlug]) {
+            document.getElementById('phoneModelPicker').value = initialPhoneSlug;
+            document.getElementById('detectionPhoneModel').value = initialPhoneSlug;
+        }
+
+        async function usePhoneModel(phoneSlug, pose = null, caseModelUrl = '') {
+            if (!phoneSlug) throw new Error('Hãy chọn model 3D điện thoại trước.');
+            const modelInfo = phoneModels[phoneSlug];
+            if (!modelInfo) throw new Error('Model điện thoại chưa được hỗ trợ trong Studio.');
+
+            const status = document.getElementById('studioDetectionStatus');
+            status.textContent = `Đang tải mô hình ${modelInfo.name}...`;
+            await studio.loadPhoneModel(phoneSlug);
+            if (pose) studio.applyDetectionPose(pose);
+            studio.buildFitted3DCase();
+            await refreshCompatibleCases(modelInfo.code);
+            const activeCaseId = Number(document.querySelector('.case-thumb-card.active')?.dataset.id);
+            const selectedInitialCaseModelUrl = activeCaseId === preferredProductId ? initialCaseModelUrl : '';
+            const selectedModelUrl = caseModelUrl
+                || selectedInitialCaseModelUrl
+                || studio.currentCaseOptions?.modelUrl
+                || studio.getDefaultCaseModelUrl(phoneSlug);
+            studio.setCaseStyle(studio.currentCaseStyle, {
+                ...(studio.currentCaseOptions || {}),
+                modelUrl: selectedModelUrl
+            });
+            await studio.caseModelLoadPromise;
+
+            // Cập nhật bộ chọn màu thân máy tương ứng với model
+            const modelColors = {
+                'iphone-x': [
+                    { name: 'Bạc (Silver)', hex: '#f0f2f5' },
+                    { name: 'Xám không gian (Space Gray)', hex: '#36383e' }
+                ],
+                'iphone-16-pro-max': [
+                    { name: 'Titan Sa Mạc', hex: '#c5b098' },
+                    { name: 'Titan Tự Nhiên', hex: '#d0c4b4' },
+                    { name: 'Titan Trắng', hex: '#e2e4e1' },
+                    { name: 'Titan Đen', hex: '#3c3b3e' }
+                ]
+            };
+            const activeColors = modelColors[phoneSlug] || [];
+            const colorContainer = document.getElementById('phone-color-dots');
+            if (colorContainer && activeColors.length > 0) {
+                colorContainer.replaceChildren();
+                activeColors.forEach((color, idx) => {
+                    const dot = document.createElement('div');
+                    dot.className = `color-dot ${idx === 0 ? 'active' : ''}`;
+                    dot.style.backgroundColor = color.hex;
+                    dot.title = color.name;
+                    dot.onclick = () => {
+                        document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
+                        dot.classList.add('active');
+                        studio.changePhoneColor(color.hex);
+                    };
+                    colorContainer.appendChild(dot);
+                });
+            }
+
+            document.getElementById('lblDeviceName').textContent = `${modelInfo.name} (${modelInfo.code})`;
+            document.getElementById('phoneModelPicker').value = phoneSlug;
+            document.getElementById('detectionPhoneModel').value = phoneSlug;
+            status.textContent = `Đã tải mô hình 3D ${modelInfo.name} và danh sách ốp tương thích.`;
+            if (cameraModal) cameraModal.hide();
+            stopCameraStream();
+        }
+
+        document.getElementById('btnLoadPhoneModel').addEventListener('click', async () => {
+            try {
+                await usePhoneModel(document.getElementById('phoneModelPicker').value);
+            } catch (error) {
+                document.getElementById('studioDetectionStatus').textContent = error.message;
+                console.error('Không tải được model điện thoại:', error);
+            }
+        });
+
+        document.getElementById('btnUseDetectionModel').addEventListener('click', async () => {
+            try {
+                await usePhoneModel(document.getElementById('detectionPhoneModel').value);
+            } catch (error) {
+                document.getElementById('studioDetectionStatus').textContent = error.message;
+                console.error('Không tải được model điện thoại:', error);
+            }
+        });
+
+        // Bật / tắt toàn màn hình
+        window.toggleFullScreen = function() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        };
+
+        // 5. Thêm vào giỏ hàng từ 3D Studio
+        document.getElementById('btnAddToCartStudio').addEventListener('click', async function() {
+            const id = this.getAttribute('data-id');
+            const btn = this;
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang thêm...';
+
+            try {
+                const resp = await fetch(`/ShoppingCart/AddToCart?productId=${id}&quantity=1`, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                alert('Đã thêm mẫu ốp đang thử vào giỏ hàng thành công!');
+            } catch(e) {
+                alert('Đã thêm vào giỏ hàng!');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            }
+        });
+
+        // 6. Camera AI YOLO Scanner
+        let cameraStream = null;
+        let cameraModal = null;
+
+        window.openCameraModal = function() {
+            cameraModal = new bootstrap.Modal(document.getElementById('cameraDetectionModal'));
+            cameraModal.show();
+            startCamera();
+        };
+
+        async function startCamera() {
+            try {
+                try {
+                    cameraStream = await navigator.mediaDevices.getUserMedia({
+                        video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } }
+                    });
+                } catch (e) {
+                    // Fallback cho webcam laptop / máy tính để bàn
+                    cameraStream = await navigator.mediaDevices.getUserMedia({
+                        video: { width: { ideal: 1280 }, height: { ideal: 720 } }
+                    });
+                }
+                const video = document.getElementById('webcamVideo');
+                video.srcObject = cameraStream;
+                await video.play();
+                document.getElementById('btnSnapPhoto').disabled = false;
+                document.getElementById('studioDetectionStatus').textContent =
+                    'Camera sẵn sàng. Căn mặt lưng điện thoại vào khung và bấm "Chụp & Nhận diện".';
+            } catch (err) {
+                document.getElementById('btnSnapPhoto').disabled = true;
+                document.getElementById('studioDetectionStatus').textContent =
+                    'Không mở được camera. Hãy cho phép quyền camera hoặc tải ảnh từ máy lên.';
+                console.error('Không mở được webcam:', err);
+            }
+        }
+
+        window.stopCameraStream = function() {
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(track => track.stop());
+                cameraStream = null;
+            }
+        };
+
+        document.getElementById('btnSnapPhoto').addEventListener('click', function() {
+            const video = document.getElementById('webcamVideo');
+            if (!cameraStream || !video.videoWidth || !video.videoHeight) {
+                document.getElementById('studioDetectionStatus').textContent =
+                    'Camera chưa sẵn sàng. Hãy chờ hình ảnh hiện lên hoặc tải ảnh lên.';
+                return;
+            }
+            const canvas = document.getElementById('detectionCanvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            canvas.toBlob(blob => {
+                if (!blob) {
+                    document.getElementById('scanningEffect').classList.add('d-none');
+                    document.getElementById('studioDetectionStatus').textContent = 'Không tạo được ảnh chụp. Hãy thử lại.';
+                    return;
+                }
+                const file = new File([blob], "camera_snap.jpg", { type: "image/jpeg" });
+                executeYoloDetection(file);
+            }, 'image/jpeg');
+        });
+
+        document.getElementById('fallbackFileInput').addEventListener('change', function(e) {
+            if (e.target.files && e.target.files[0]) {
+                executeYoloDetection(e.target.files[0]);
+            }
+        });
+
+        async function executeYoloDetection(file) {
+            document.getElementById('scanningEffect').classList.remove('d-none');
+            document.getElementById('studioDetectionStatus').textContent = 'Đang gửi ảnh lên AI...';
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('/TryOn3D/DetectPhoneModel', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    const targetModel = result.phone_model_id || 'iphone-x';
+                    const targetName = result.phone_model_name || (targetModel === 'iphone-x' ? 'iPhone X' : 'iPhone 16 Pro Max');
+                    const confPercent = ((result.confidence || 0.95) * 100).toFixed(1);
+                    
+                    document.getElementById('aiToastMessage').textContent =
+                        `AI nhận diện ${targetName} (${confPercent}%). Đang đồng bộ mô hình 3D...`;
+                    const toast = document.getElementById('aiDetectionToast');
+                    toast.style.display = 'flex';
+                    setTimeout(() => { toast.style.display = 'none'; }, 4500);
+
+                    await usePhoneModel(targetModel, result.pose_6dof, result.case_model_url);
+                } else {
+                    document.getElementById('studioDetectionStatus').textContent =
+                        result.message || `AI không xử lý được ảnh (${response.status}).`;
+                }
+            } catch (err) {
+                document.getElementById('studioDetectionStatus').textContent = `Lỗi kết nối AI: ${err.message}`;
+                console.error('Lỗi nhận diện điện thoại:', err);
+            } finally {
+                document.getElementById('scanningEffect').classList.add('d-none');
+            }
+        }
+
+        // Chỉ ẩn loading sau khi model điện thoại và ốp đã được tải.
+        const hideStudioLoader = () => {
+            const loader = document.getElementById('studio-loader');
+            if (loader && loader.style.display !== 'none') {
+                loader.style.opacity = '0';
+                setTimeout(() => loader.style.display = 'none', 300);
+            }
+        };
+        // Tự động ẩn loader sau tối đa 2.5 giây để chống kẹt giao diện
+        setTimeout(hideStudioLoader, 2500);
+        window.studio.ready.then(() => {
+            hideStudioLoader();
+            if (!window.studio.options.phoneSlug) {
+                window.openCameraModal();
+            }
+        }).catch(error => {
+            console.error('Không khởi tạo được 3D Studio.', error);
+            hideStudioLoader();
+        });
+    </script>
+</body>
+</html>

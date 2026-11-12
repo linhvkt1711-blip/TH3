@@ -1,0 +1,48 @@
+@page
+@model DeletePersonalDataModel
+@{
+    ViewData["Title"] = "Xóa dữ liệu tài khoản";
+    ViewData["ActivePage"] = "PersonalData";
+}
+
+<h3 class="fw-bold text-dark mb-4 border-bottom pb-2">
+    <i class="fa-solid fa-trash-can text-danger me-2"></i>Xóa tài khoản của bạn
+</h3>
+
+<div class="row animate-fade-in">
+    <div class="col-lg-8">
+        <div class="alert alert-danger border-0 rounded-3 shadow-sm d-flex align-items-center gap-2 mb-4">
+            <i class="fa-solid fa-circle-exclamation fs-4"></i>
+            <div>
+                <strong>Cảnh báo:</strong> Việc xóa tài khoản này sẽ xóa vĩnh viễn và không thể khôi phục lại dữ liệu của bạn!
+            </div>
+        </div>
+
+        <form id="delete-user-form" method="post">
+            <div asp-validation-summary="All" class="text-danger small mb-3" role="alert"></div>
+
+            @if (Model.RequirePassword)
+            {
+                <p class="text-muted small mb-3">Vui lòng nhập mật khẩu của bạn để xác nhận hành động xóa tài khoản:</p>
+                <div class="form-floating mb-4">
+                    <input asp-for="Input.Password" class="form-control rounded-3 border" autocomplete="current-password" aria-required="true" placeholder="Mật khẩu" />
+                    <label asp-for="Input.Password"><i class="fa-solid fa-lock me-2 text-danger"></i>Mật khẩu xác thực</label>
+                    <span asp-validation-for="Input.Password" class="text-danger small"></span>
+                </div>
+            }
+
+            <div class="d-flex align-items-center gap-2">
+                <button class="btn btn-danger rounded-3 px-4 py-2 fw-semibold" type="submit">
+                    <i class="fa-solid fa-trash-arrow-up me-1"></i> Xác nhận xóa vĩnh viễn
+                </button>
+                <a asp-page="./PersonalData" class="btn btn-outline-secondary rounded-3 px-4 py-2 fw-semibold">
+                    Hủy bỏ
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

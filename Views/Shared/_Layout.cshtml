@@ -1,0 +1,294 @@
+@using TH3.Extensions
+@using TH3.Models
+@{
+    var cart = Context.Session.GetObjectFromJson<ShoppingCart>("Cart");
+    int cartCount = cart != null ? cart.Items.Sum(i => i.Quantity) : 0;
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    @* --- CẬP NHẬT TITLE --- *@
+    <title>@ViewData["Title"] - ACE STORE - Cửa hàng Công nghệ </title>
+
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
+    <style>
+        :root {
+            --primary-red: #d70018;
+            --dark-red: #af0013;
+            --light-gray: #f8f9fa;
+        }
+
+        body {
+            background-color: #f1f2f6;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            color: #333;
+        }
+
+        .header-main {
+            background-color: var(--primary-red);
+            background-image: linear-gradient(135deg, var(--primary-red) 0%, var(--dark-red) 100%);
+            padding: 7px 0;
+            position: sticky;
+            top: 0;
+            z-index: 1050;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .navbar-brand {
+            font-weight: 800;
+            font-size: 1.6rem;
+            letter-spacing: -1.5px;
+            color: white !important;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .search-container {
+            background: rgba(255, 255, 255, 1);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            padding: 2px 5px;
+            transition: all 0.3s ease;
+        }
+
+            .search-container:focus-within {
+                box-shadow: 0 0 0 3px rgba(255, 206, 0, 0.4);
+            }
+
+        .search-box {
+            border: none;
+            padding: 8px 12px;
+            width: 100%;
+            outline: none;
+            font-size: 0.9rem;
+            border-radius: 12px;
+        }
+
+        .header-item {
+            color: white !important;
+            text-decoration: none !important;
+            font-size: 11px;
+            font-weight: 500;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 6px 12px;
+            border-radius: 12px;
+            transition: all 0.2s;
+            min-width: 65px;
+            position: relative;
+        }
+
+            .header-item:hover {
+                background: rgba(255, 255, 255, 0.15);
+                transform: translateY(-2px);
+            }
+
+            .header-item i {
+                font-size: 1.3rem;
+                margin-bottom: 3px;
+            }
+
+        #cart-count {
+            background-color: #ffce00;
+            color: #000;
+            font-weight: bold;
+            font-size: 10px;
+            border: 2px solid var(--primary-red);
+            top: 5px !important;
+            right: 12px !important;
+        }
+
+        .dropdown-menu {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+            padding: 10px;
+            animation: slideUp 0.3s ease;
+        }
+
+        @@keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .dropdown-item {
+            border-radius: 10px;
+            padding: 10px 15px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: 0.2s;
+        }
+
+            .dropdown-item:hover {
+                background-color: var(--light-gray);
+                color: var(--primary-red);
+                padding-left: 20px;
+            }
+
+        footer {
+            background: white;
+            border-top: 1px solid #eee;
+            padding: 40px 0 20px 0;
+            margin-top: 60px;
+        }
+
+        .footer-title {
+            font-weight: 700;
+            color: #222;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="header-main">
+        <div class="container">
+            <div class="row align-items-center">
+
+                <div class="col-lg-2 col-md-3 col-6">
+                    @* --- CẬP NHẬT LOGO --- *@
+                    <div class="col-lg-2 col-md-3 col-6">
+                        @* Thêm asp-controller="Home" và asp-action="Index" *@
+                        <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
+                            <i class="fa-solid fa-bolt-lightning"></i> ACE STORE
+                        </a>
+                    </div>
+                </div>
+
+                <div class="col-lg-4 col-md-5 d-none d-md-block">
+                    <form asp-area="" asp-controller="Home" asp-action="Index" method="get">
+                        <div class="search-container">
+                            <input type="text" name="searchString" class="search-box" placeholder="Bạn tìm gì hôm nay?">
+                            <button type="submit" class="btn btn-link text-muted p-2">
+                                <i class="fa fa-search"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="col-lg-6 col-md-4 col-6">
+                    <ul class="d-flex align-items-center justify-content-end gap-1 list-unstyled mb-0">
+
+                        
+
+                        <li class="category-menu-wrapper">
+                            @await Component.InvokeAsync("CategoryMenu")
+                        </li>
+
+                        <li>
+                            <a asp-area="" asp-controller="TryOn3D" asp-action="Studio" class="header-item text-warning" title="Phòng thử ốp lưng 3D & AI YOLO">
+                                <i class="fa-solid fa-cube text-warning"></i>
+                                <span class="text-warning fw-bold">Thử ốp 3D</span>
+                            </a>
+                        </li>
+
+                        @if (User.Identity.IsAuthenticated && User.IsInRole("Admin"))
+                        {
+                            <li class="dropdown">
+                                <a class="header-item dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                                    <i class="fa-solid fa-user-shield"></i>
+                                    <span>Quản trị</span>
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" asp-area="" asp-controller="Category" asp-action="Index"><i class="fa-solid fa-layer-group me-2"></i>Danh mục</a></li>
+                                    <li><a class="dropdown-item" asp-area="" asp-controller="Product" asp-action="Index"><i class="fa-solid fa-box me-2"></i>Sản phẩm</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" asp-area="" asp-controller="OrderManager" asp-action="Index"><i class="fa-solid fa-truck-fast me-2"></i>Đơn hàng</a></li>
+                                    <li><a class="dropdown-item" asp-area="" asp-controller="ShoppingCart" asp-action="Revenue"><i class="fa-solid fa-chart-pie me-2"></i>Doanh thu</a></li>
+                                </ul>
+                            </li>
+                        }
+
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            <li>
+                                <a asp-area="" asp-controller="Order" asp-action="Index" class="header-item">
+                                    <i class="fa-solid fa-receipt"></i>
+                                    <span>Lịch sử</span>
+                                </a>
+                            </li>
+                        }
+
+                        <li>
+                            <a asp-area="" asp-controller="ShoppingCart" asp-action="Index" class="header-item">
+                                <i class="fa-solid fa-cart-shopping"></i>
+                                <span>Giỏ hàng</span>
+                                <span id="cart-count" class="position-absolute translate-middle badge rounded-pill">
+                                    @cartCount
+                                </span>
+                            </a>
+                        </li>
+
+                        <li class="ms-2 border-start border-white border-opacity-25 ps-2">
+                            <partial name="_LoginPartial" />
+                        </li>
+
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container mt-4">
+        <main role="main" class="pb-5">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer>
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-md-4">
+                    @* --- CẬP NHẬT TÊN TRONG FOOTER --- *@
+                    <div class="footer-title">Về ACE STORE</div>
+                    <p class="small text-muted">Hệ thống bán lẻ điện thoại, máy tính bảng, laptop chính hãng uy tín hàng đầu Việt Nam.</p>
+                    <div class="d-flex gap-3 fs-5 mt-3">
+                        <i class="fa-brands fa-facebook text-primary"></i>
+                        <i class="fa-brands fa-youtube text-danger"></i>
+                        <i class="fa-brands fa-tiktok"></i>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="footer-title">Hỗ trợ khách hàng</div>
+                    <ul class="list-unstyled small">
+                        <li class="mb-2"><a href="#" class="text-decoration-none text-muted">Chính sách bảo hành</a></li>
+                        <li class="mb-2"><a href="#" class="text-decoration-none text-muted">Hình thức thanh toán</a></li>
+                        <li class="mb-2"><a href="#" class="text-decoration-none text-muted">Vận chuyển & Giao nhận</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <div class="footer-title">Liên hệ</div>
+                    <p class="small mb-1">Hotline: <strong class="text-danger">1800.XXXX</strong></p>
+                    <p class="small">Email: support@acestore.vn</p>
+                    <p class="mt-4 small text-muted">© 2026 ACE STORE. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+    @await Html.PartialAsync("_ChatboxPartial")
+</body>
+</html>
