@@ -1,25 +1,23 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\HOAI LINH\\Downloads\\TH3-main-case3d-updated\\TH3-main_test\\TH3.csproj": {}
+    "D:\\TH\\TH3\\TH3.csproj": {}
   },
   "projects": {
-    "C:\\Users\\HOAI LINH\\Downloads\\TH3-main-case3d-updated\\TH3-main_test\\TH3.csproj": {
+    "D:\\TH\\TH3\\TH3.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\HOAI LINH\\Downloads\\TH3-main-case3d-updated\\TH3-main_test\\TH3.csproj",
+        "projectUniqueName": "D:\\TH\\TH3\\TH3.csproj",
         "projectName": "TH3",
-        "projectPath": "C:\\Users\\HOAI LINH\\Downloads\\TH3-main-case3d-updated\\TH3-main_test\\TH3.csproj",
-        "packagesPath": "C:\\Users\\HOAI LINH\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\HOAI LINH\\Downloads\\TH3-main-case3d-updated\\TH3-main_test\\obj\\",
+        "projectPath": "D:\\TH\\TH3\\TH3.csproj",
+        "packagesPath": "C:\\Users\\ADMIN\\.nuget\\packages\\",
+        "outputPath": "D:\\TH\\TH3\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
-          "C:\\Program Files\\DevExpress 24.1\\Components\\Offline Packages",
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\HOAI LINH\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\DevExpress 24.1.config",
+          "C:\\Users\\ADMIN\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -28,8 +26,6 @@
         ],
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "C:\\Program Files\\DevExpress 24.1\\Components\\System\\Components\\Packages": {},
-          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -48,7 +44,7 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "9.0.300"
+        "SdkAnalysisLevel": "10.0.200"
       },
       "frameworks": {
         "net8.0": {
@@ -122,7 +118,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.312/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.201/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

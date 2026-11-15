@@ -73,6 +73,7 @@ PHONE_NAMES = {
     "iphone-15-prm": "iPhone 15 Pro Max",
     "samsung-s24-ultra": "Samsung Galaxy S24 Ultra",
     "iphone-16-pro-max": "iPhone 16 Pro Max",
+    "iphone-11": "iPhone 11",
     "iphone-x": "iPhone X"
 }
 
@@ -81,6 +82,7 @@ PHONE_DEVICE_CODES = {
     "iphone-15-prm": "IP02",
     "samsung-s24-ultra": "SS01",
     "iphone-16-pro-max": "IP05",
+    "iphone-11": "IP11",
     "iphone-x": "IPX01"
 }
 

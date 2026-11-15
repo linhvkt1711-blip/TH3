@@ -32,6 +32,12 @@ PHONE_MODELS = {
         "device_code": "IP02",
         "case_model_url": ""
     },
+    "iphone-11": {
+        "id": "iphone-11",
+        "name": "iPhone 11",
+        "device_code": "IP11",
+        "case_model_url": ""
+    },
     "samsung-s24-ultra": {
         "id": "samsung-s24-ultra",
         "name": "Samsung Galaxy S24 Ultra",

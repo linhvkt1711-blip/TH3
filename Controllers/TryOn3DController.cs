@@ -101,12 +101,10 @@ namespace TH3.Controllers
             var targetSlug = string.IsNullOrWhiteSpace(deviceSlug) ? "iphone-x" : deviceSlug;
             var phone = PhoneModel.DefaultPhones.FirstOrDefault(p => p.Slug.Equals(targetSlug, StringComparison.OrdinalIgnoreCase));
 
-            // 4. Chỉ hiển thị ốp đúng dòng máy hoặc ốp được đánh dấu dùng chung.
-            var compatibleCases = allCases
-                .Where(p => phone == null
-                    || string.IsNullOrWhiteSpace(p.CompatibleDeviceCode)
-                    || p.CompatibleDeviceCode.Equals(phone.DeviceCode, StringComparison.OrdinalIgnoreCase))
-                .ToList();
+            // 4. Chỉ hiển thị các mẫu ốp CHUẨN XÁC của dòng máy đang chọn (Tuyệt đối không hiện ốp của máy khác)
+            var compatibleCases = phone != null
+                ? allCases.Where(p => IsCaseMatchingPhone(p, phone)).ToList()
+                : allCases;
 
             // Nếu ốp đang chọn không tương thích, tự chuyển sang mẫu tương thích đầu tiên.
             if (activeProduct.Id != 9999
@@ -131,26 +129,83 @@ namespace TH3.Controllers
             return View();
         }
 
+        // Kiểm tra xem một sản phẩm ốp lưng có thật sự dành riêng cho dòng điện thoại này không
+        private static bool IsCaseMatchingPhone(Product product, PhoneModel phone)
+        {
+            if (product == null || phone == null) return false;
+
+            // 1. Nếu có gán mã thiết bị tương thích cụ thể
+            if (!string.IsNullOrWhiteSpace(product.CompatibleDeviceCode))
+            {
+                return product.CompatibleDeviceCode.Equals(phone.DeviceCode, StringComparison.OrdinalIgnoreCase);
+            }
+
+            // 2. Dự phòng: phân tích theo tên sản phẩm để tránh trường hợp sót mã
+            var productName = (product.Name ?? string.Empty).ToLower();
+            var phoneCode = (phone.DeviceCode ?? string.Empty).ToUpper();
+
+            if (phoneCode == "IPX01") // iPhone X / Xs / 10
+                return productName.Contains("iphone x") || productName.Contains("iphone 10") || productName.Contains("ipx");
+
+            if (phoneCode == "IPXR") // iPhone XR
+                return productName.Contains("iphone xr") || productName.Contains("ipxr");
+
+            if (phoneCode == "IP11") // iPhone 11 (thường)
+                return productName.Contains("iphone 11") && !productName.Contains("pro") && !productName.Contains("prm");
+
+            if (phoneCode == "IP11PM") // iPhone 11 Pro Max
+                return productName.Contains("11 pro max") || productName.Contains("11 prm");
+
+            if (phoneCode == "IP12") // iPhone 12 / 12 Pro
+                return (productName.Contains("iphone 12") || productName.Contains("ip12")) && !productName.Contains("mini") && !productName.Contains("max");
+
+            if (phoneCode == "IP13") // iPhone 13
+                return (productName.Contains("iphone 13") || productName.Contains("ip13")) && !productName.Contains("pro") && !productName.Contains("max");
+
+            if (phoneCode == "IP13PM") // iPhone 13 Pro Max
+                return productName.Contains("13 pro max") || productName.Contains("13 prm");
+
+            if (phoneCode == "IP14PM") // iPhone 14 Pro Max
+                return productName.Contains("14 pro max") || productName.Contains("14 prm");
+
+            if (phoneCode == "IP01") // iPhone 15 Pro
+                return productName.Contains("15 pro") && !productName.Contains("max") && !productName.Contains("prm");
+
+            if (phoneCode == "IP05") // iPhone 16 Pro Max
+                return productName.Contains("16 pro max") || productName.Contains("16 prm");
+
+            if (phoneCode == "SS01") // Samsung S24 Ultra
+                return productName.Contains("s24 ultra") || productName.Contains("s24u");
+
+            return false;
+        }
+
         private static string? GetPhoneSlug(string? value)
         {
             if (string.IsNullOrWhiteSpace(value)) return null;
 
             var codeOrName = value.Trim();
-            if (codeOrName.Equals("IPX01", StringComparison.OrdinalIgnoreCase)
-                || codeOrName.Contains("iPhone X", StringComparison.OrdinalIgnoreCase))
+            if (codeOrName.Equals("IPX01", StringComparison.OrdinalIgnoreCase) || codeOrName.Contains("iPhone X", StringComparison.OrdinalIgnoreCase) || codeOrName.Contains("iPhone 10", StringComparison.OrdinalIgnoreCase))
                 return "iphone-x";
-            if (codeOrName.Equals("IP05", StringComparison.OrdinalIgnoreCase)
-                || codeOrName.Contains("iPhone 16", StringComparison.OrdinalIgnoreCase))
+            if (codeOrName.Equals("IPXR", StringComparison.OrdinalIgnoreCase) || codeOrName.Contains("iPhone XR", StringComparison.OrdinalIgnoreCase))
+                return "iphone-xr";
+            if (codeOrName.Equals("IP11PM", StringComparison.OrdinalIgnoreCase) || codeOrName.Contains("11 Pro Max", StringComparison.OrdinalIgnoreCase))
+                return "iphone-11-prm";
+            if (codeOrName.Equals("IP11", StringComparison.OrdinalIgnoreCase) || codeOrName.Equals("IP1101", StringComparison.OrdinalIgnoreCase) || codeOrName.Contains("iPhone 11", StringComparison.OrdinalIgnoreCase))
+                return "iphone-11";
+            if (codeOrName.Equals("IP12", StringComparison.OrdinalIgnoreCase) || codeOrName.Contains("iPhone 12", StringComparison.OrdinalIgnoreCase))
+                return "iphone-12";
+            if (codeOrName.Equals("IP13PM", StringComparison.OrdinalIgnoreCase) || codeOrName.Contains("13 Pro Max", StringComparison.OrdinalIgnoreCase))
+                return "iphone-13-prm";
+            if (codeOrName.Equals("IP13", StringComparison.OrdinalIgnoreCase) || codeOrName.Contains("iPhone 13", StringComparison.OrdinalIgnoreCase))
+                return "iphone-13";
+            if (codeOrName.Equals("IP14PM", StringComparison.OrdinalIgnoreCase) || codeOrName.Contains("14 Pro Max", StringComparison.OrdinalIgnoreCase))
+                return "iphone-14-prm";
+            if (codeOrName.Equals("IP05", StringComparison.OrdinalIgnoreCase) || codeOrName.Contains("iPhone 16", StringComparison.OrdinalIgnoreCase))
                 return "iphone-16-pro-max";
-            if (codeOrName.Equals("IP02", StringComparison.OrdinalIgnoreCase)
-                || codeOrName.Contains("iPhone 15 Pro Max", StringComparison.OrdinalIgnoreCase))
-                return "iphone-15-prm";
-            if (codeOrName.Equals("SS01", StringComparison.OrdinalIgnoreCase)
-                || codeOrName.Contains("Samsung", StringComparison.OrdinalIgnoreCase)
-                || codeOrName.Contains("S24", StringComparison.OrdinalIgnoreCase))
+            if (codeOrName.Equals("SS01", StringComparison.OrdinalIgnoreCase) || codeOrName.Contains("Samsung", StringComparison.OrdinalIgnoreCase) || codeOrName.Contains("S24", StringComparison.OrdinalIgnoreCase))
                 return "samsung-s24-ultra";
-            if (codeOrName.Equals("IP01", StringComparison.OrdinalIgnoreCase)
-                || codeOrName.Contains("iPhone 15 Pro", StringComparison.OrdinalIgnoreCase))
+            if (codeOrName.Equals("IP01", StringComparison.OrdinalIgnoreCase) || codeOrName.Contains("iPhone 15 Pro", StringComparison.OrdinalIgnoreCase))
                 return "iphone-15-pro";
 
             return null;
@@ -169,14 +224,17 @@ namespace TH3.Controllers
             var caseCategory = await _context.Categories
                 .FirstOrDefaultAsync(c => c.Name.Contains("Ốp") || c.Name.Contains("Case"));
             var caseCatId = caseCategory?.Id ?? 0;
-            var products = await _context.Products
+            var allCandidateCases = await _context.Products
                 .Include(p => p.Category)
                 .Where(p => (caseCatId > 0 && p.CategoryId == caseCatId)
                     || p.Name.Contains("Ốp")
                     || p.Name.Contains("Case"))
-                .Where(p => string.IsNullOrWhiteSpace(p.CompatibleDeviceCode)
-                    || p.CompatibleDeviceCode == phone.DeviceCode)
                 .OrderByDescending(p => p.Id)
+                .ToListAsync();
+
+            // Chỉ lấy các ốp khớp chính xác với dòng điện thoại này
+            var products = allCandidateCases
+                .Where(p => IsCaseMatchingPhone(p, phone))
                 .Select(p => new
                 {
                     id = p.Id,
@@ -188,7 +246,7 @@ namespace TH3.Controllers
                     modelUrl = p.Case3DModelPath ?? string.Empty,
                     compatibleDeviceCode = p.CompatibleDeviceCode ?? phone.DeviceCode
                 })
-                .ToListAsync();
+                .ToList();
 
             return Json(products);
         }

@@ -189,10 +189,17 @@
         <label for="phoneModelPicker" class="small text-white-50 text-center d-block mb-1">CHỌN MODEL 3D</label>
         <select id="phoneModelPicker" class="form-select form-select-sm bg-dark text-white border-secondary">
             <option value="">Chọn model 3D</option>
-            <option value="iphone-x">iPhone X</option>
-            <option value="iphone-15-pro">iPhone 15 Pro</option>
-            <option value="iphone-15-prm">iPhone 15 Pro Max</option>
-            <option value="iphone-16-pro-max">iPhone 16 Pro Max</option>
+            <option value="iphone-x">1. iPhone X / Xs (iPhone 10)</option>
+            <option value="iphone-xr">2. iPhone XR</option>
+            <option value="iphone-11">3. iPhone 11</option>
+            <option value="iphone-11-prm">4. iPhone 11 Pro Max</option>
+            <option value="iphone-12">5. iPhone 12</option>
+            <option value="iphone-13">6. iPhone 13</option>
+            <option value="iphone-13-prm">7. iPhone 13 Pro Max</option>
+            <option value="iphone-14-prm">8. iPhone 14 Pro Max</option>
+            <option value="iphone-15-pro">9. iPhone 15 Pro</option>
+            <option value="iphone-16-pro-max">10. iPhone 16 Pro Max</option>
+            <option value="samsung-s24-ultra">11. Samsung Galaxy S24 Ultra</option>
         </select>
         <button type="button" id="btnLoadPhoneModel" class="btn btn-sm btn-warning w-100 mt-2 mb-3">Tải điện thoại vào Studio</button>
 
@@ -303,10 +310,17 @@
                     <div class="w-100 d-flex gap-2">
                         <select id="detectionPhoneModel" class="form-select bg-dark text-white border-secondary">
                             <option value="">Chọn model 3D</option>
-                            <option value="iphone-x">iPhone X</option>
-                            <option value="iphone-15-pro">iPhone 15 Pro</option>
-                            <option value="iphone-15-prm">iPhone 15 Pro Max</option>
-                            <option value="iphone-16-pro-max">iPhone 16 Pro Max</option>
+                            <option value="iphone-x">1. iPhone X / Xs (iPhone 10)</option>
+                            <option value="iphone-xr">2. iPhone XR</option>
+                            <option value="iphone-11">3. iPhone 11</option>
+                            <option value="iphone-11-prm">4. iPhone 11 Pro Max</option>
+                            <option value="iphone-12">5. iPhone 12</option>
+                            <option value="iphone-13">6. iPhone 13</option>
+                            <option value="iphone-13-prm">7. iPhone 13 Pro Max</option>
+                            <option value="iphone-14-prm">8. iPhone 14 Pro Max</option>
+                            <option value="iphone-15-pro">9. iPhone 15 Pro</option>
+                            <option value="iphone-16-pro-max">10. iPhone 16 Pro Max</option>
+                            <option value="samsung-s24-ultra">11. Samsung Galaxy S24 Ultra</option>
                         </select>
                         <button type="button" id="btnUseDetectionModel" class="btn btn-warning text-nowrap">Dùng model 3D này</button>
                     </div>
@@ -468,10 +482,17 @@
         }
 
         const phoneModels = {
-            'iphone-x': { name: 'iPhone X', code: 'IPX01' },
+            'iphone-x': { name: 'iPhone X / Xs (iPhone 10)', code: 'IPX01' },
+            'iphone-xr': { name: 'iPhone XR', code: 'IPXR' },
+            'iphone-11': { name: 'iPhone 11', code: 'IP11' },
+            'iphone-11-prm': { name: 'iPhone 11 Pro Max', code: 'IP11PM' },
+            'iphone-12': { name: 'iPhone 12', code: 'IP12' },
+            'iphone-13': { name: 'iPhone 13', code: 'IP13' },
+            'iphone-13-prm': { name: 'iPhone 13 Pro Max', code: 'IP13PM' },
+            'iphone-14-prm': { name: 'iPhone 14 Pro Max', code: 'IP14PM' },
             'iphone-15-pro': { name: 'iPhone 15 Pro', code: 'IP01' },
-            'iphone-15-prm': { name: 'iPhone 15 Pro Max', code: 'IP02' },
-            'iphone-16-pro-max': { name: 'iPhone 16 Pro Max', code: 'IP05' }
+            'iphone-16-pro-max': { name: 'iPhone 16 Pro Max', code: 'IP05' },
+            'samsung-s24-ultra': { name: 'Samsung Galaxy S24 Ultra', code: 'SS01' }
         };
         const initialPhoneSlug = '@(phone?.Slug ?? "")';
         if (phoneModels[initialPhoneSlug]) {

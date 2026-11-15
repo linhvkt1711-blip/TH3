@@ -179,15 +179,26 @@ export class TryOnStudio {
         phoneSlug = String(phoneSlug || '').trim().toLowerCase();
 
         const iphoneDimensions = {
+            'iphone-x': [0.0709, 0.1436, 0.0077],
+            'iphone-xr': [0.0757, 0.1509, 0.0083],
+            'iphone-11': [0.0757, 0.1509, 0.0083],
+            'iphone-11-prm': [0.0778, 0.1580, 0.0081],
+            'iphone-12': [0.0715, 0.1467, 0.0074],
+            'iphone-13': [0.0715, 0.1467, 0.00765],
+            'iphone-13-prm': [0.0781, 0.1608, 0.00765],
+            'iphone-14-prm': [0.0776, 0.1607, 0.00785],
             'iphone-15-pro': [0.0706, 0.1466, 0.00825],
-            'iphone-15-prm': [0.0767, 0.1599, 0.00825],
             'iphone-16-pro-max': [0.0776, 0.1630, 0.00825],
-            'iphone-x': [0.0709, 0.1436, 0.0077]
+            'samsung-s24-ultra': [0.0790, 0.1623, 0.00860]
         };
 
         // Only declare GLB files that are confirmed to exist.
         const modelPaths = {
             'iphone-x': '/models/phones/iphone-x/iphone_x.glb',
+            'iphone-13-prm': '/models/phones/iphone-13-prm.glb',
+            'iphone-14-prm': '/models/phones/iphone-14-prm.glb',
+            'iphone-15-pro': '/models/phones/iphone-15-pro.glb',
+            'iphone-15-prm': '/models/phones/iphone-15-prm.glb',
             'iphone-16-pro-max': '/models/phones/iphone-16-pro-max-no-sim-desert-titanium.glb'
         };
 
@@ -214,6 +225,8 @@ export class TryOnStudio {
 
             if (isIPhoneXModel) {
                 gltf.scene.rotation.y = Math.PI;
+            } else if (phoneSlug === 'iphone-13-prm' || phoneSlug === 'iphone-14-prm') {
+                gltf.scene.rotation.y = 0;
             } else if (isIPhone) {
                 gltf.scene.rotation.y = -Math.PI / 2;
             }
@@ -236,6 +249,11 @@ export class TryOnStudio {
                 innerSize.z
             ];
 
+            // Non-uniform scale cho tất cả models: nén/giãn đúng kích thước thực tế
+            const scaleX = dimensions[0] / innerSize.x;
+            const scaleY = dimensions[1] / innerSize.y;
+            const scaleZ = dimensions[2] / innerSize.z;
+
             this.phoneDimensions = {
                 width: dimensions[0],
                 height: dimensions[1],
@@ -243,20 +261,99 @@ export class TryOnStudio {
                 radius: Math.min(dimensions[0], dimensions[1]) * 0.12
             };
 
-            this.cameraPlateauInfo = {
-                x: -dimensions[0] * (isIPhoneXModel ? 0.29 : 0.20),
-                y: dimensions[1] * (isIPhoneXModel ? 0.34 : 0.354),
-                width: dimensions[0] * (isIPhoneXModel ? 0.24 : 0.52),
-                height: dimensions[1] * (isIPhoneXModel ? 0.24 : 0.26),
-                radius: Math.min(dimensions[0], dimensions[1]) *
-                    (isIPhoneXModel ? 0.045 : 0.09)
-            };
+            if (isIPhoneXModel) {
+                // 1. iPhone X / Xs: Camera viên thuốc dọc hẹp (tọa độ đo từ GLB)
+                this.cameraPlateauInfo = {
+                    x: -dimensions[0] * 0.339,
+                    y: dimensions[1] * 0.375,
+                    width: 0.0120,
+                    height: 0.0260,
+                    radius: 0.0060
+                };
+            } else if (phoneSlug === 'iphone-xr') {
+                // 2. iPhone XR: 1 Camera đơn tròn
+                this.cameraPlateauInfo = {
+                    x: -dimensions[0] * 0.285,
+                    y: dimensions[1] * 0.355,
+                    width: 0.0150,
+                    height: 0.0150,
+                    radius: 0.0075
+                };
+            } else if (phoneSlug === 'iphone-11') {
+                // 3. iPhone 11: Cụm vuông 2 mắt dọc
+                this.cameraPlateauInfo = {
+                    x: -dimensions[0] * 0.260,
+                    y: dimensions[1] * 0.340,
+                    width: 0.0295,
+                    height: 0.0320,
+                    radius: 0.0080
+                };
+            } else if (phoneSlug === 'iphone-11-prm') {
+                // 4. iPhone 11 Pro Max: Cụm vuông 3 mắt
+                this.cameraPlateauInfo = {
+                    x: -dimensions[0] * 0.245,
+                    y: dimensions[1] * 0.345,
+                    width: 0.0330,
+                    height: 0.0350,
+                    radius: 0.0080
+                };
+            } else if (phoneSlug === 'iphone-12') {
+                // 5. iPhone 12: Cụm vuông 2 mắt dọc viền phẳng
+                this.cameraPlateauInfo = {
+                    x: -dimensions[0] * 0.255,
+                    y: dimensions[1] * 0.340,
+                    width: 0.0290,
+                    height: 0.0310,
+                    radius: 0.0075
+                };
+            } else if (phoneSlug === 'iphone-13') {
+                // 6. iPhone 13: Cụm vuông 2 mắt chéo
+                this.cameraPlateauInfo = {
+                    x: -dimensions[0] * 0.255,
+                    y: dimensions[1] * 0.340,
+                    width: 0.0305,
+                    height: 0.0325,
+                    radius: 0.0080
+                };
+            } else if (phoneSlug === 'iphone-13-prm') {
+                // 7. iPhone 13 Pro Max: Cụm vuông 3 mắt lớn
+                this.cameraPlateauInfo = {
+                    x: -dimensions[0] * 0.222,
+                    y: dimensions[1] * 0.360,
+                    width: 0.0370,
+                    height: 0.0395,
+                    radius: 0.0080
+                };
+            } else if (phoneSlug === 'iphone-14-prm') {
+                // 8. iPhone 14 Pro Max: Cụm vuông 3 mắt
+                this.cameraPlateauInfo = {
+                    x: -dimensions[0] * 0.200,
+                    y: dimensions[1] * 0.350,
+                    width: 0.0314,
+                    height: 0.0330,
+                    radius: 0.0075
+                };
+            } else if (phoneSlug === 'samsung-s24-ultra') {
+                // Samsung S24 Ultra: Cụm 4 camera rời thẳng hàng
+                this.cameraPlateauInfo = {
+                    x: -dimensions[0] * 0.280,
+                    y: dimensions[1] * 0.285,
+                    width: 0.0270,
+                    height: 0.0590,
+                    radius: 0.0060
+                };
+            } else {
+                // 9 & 10. iPhone 15 Pro, iPhone 16 Pro Max
+                this.cameraPlateauInfo = {
+                    x: -dimensions[0] * 0.215,
+                    y: dimensions[1] * 0.335,
+                    width: dimensions[0] * 0.50,
+                    height: dimensions[1] * 0.255,
+                    radius: 0.0085
+                };
+            }
 
-            this.phoneMesh.scale.set(
-                dimensions[0] / innerSize.x,
-                dimensions[1] / innerSize.y,
-                dimensions[2] / innerSize.z
-            );
+            this.phoneMesh.scale.set(scaleX, scaleY, scaleZ);
 
             this.phoneMesh.rotation.set(0, 0, 0);
             this.phoneMesh.position.set(0, 0, 0);
@@ -326,13 +423,18 @@ export class TryOnStudio {
                 return true;
             }
 
-            if (phoneSlug === 'iphone-15-pro' || phoneSlug === 'iphone-15-prm') {
+            if (phoneSlug === 'iphone-11') {
+                this.createPhotorealisticIPhone11();
+                return true;
+            }
+
+            if (phoneSlug === 'iphone-15-pro' || phoneSlug === 'iphone-15-prm' || phoneSlug === 'iphone-16-pro-max') {
                 this.createPhotorealisticIPhone15Pro(phoneSlug);
                 return true;
             }
 
-            if (phoneSlug === 'iphone-16-pro-max') {
-                this.createPhotorealisticIPhone15Pro(phoneSlug);
+            if (phoneSlug === 'samsung-s24-ultra') {
+                this.createPhotorealisticSamsungS24();
                 return true;
             }
 
@@ -1349,6 +1451,264 @@ export class TryOnStudio {
 
     console.log(`Đã tạo mô hình dự phòng: ${phoneSlug}`);
 }
+
+    // ==================================================================================
+    // TẠO MÔ HÌNH IPHONE 11 CHÂN THỰC (CỤM 2 CAMERA VUÔNG, VIỀN NHÔM BO CONG)
+    // ==================================================================================
+    createPhotorealisticIPhone11(colorHex = '#c7d8ca') {
+        if (this.phoneMesh) {
+            this.phoneGroup.remove(this.phoneMesh);
+            this.phoneMesh = null;
+        }
+
+        this.phoneMeshUsesRotatedAxes = false;
+        this.isIPhoneX = false;
+        this.options.phoneSlug = 'iphone-11';
+
+        const group = new THREE.Group();
+        group.name = "Phone_Model_Group_IPhone11";
+
+        // Kích thước chuẩn CAD iPhone 11 (75.7mm x 150.9mm x 8.3mm)
+        const width = 0.0757;
+        const height = 0.1509;
+        const depth = 0.0083;
+        const radius = 0.0095;
+
+        this.phoneDimensions = { width, height, depth, radius };
+
+        // 1. Khung nhôm anodized bo cong mượt mà
+        const frameShape = this.createRoundedRectShape(width, height, radius);
+        const extrudeSettings = {
+            depth: depth,
+            bevelEnabled: true,
+            bevelSegments: 8,
+            steps: 1,
+            bevelSize: 0.0022,
+            bevelThickness: 0.0022
+        };
+        const frameGeo = new THREE.ExtrudeGeometry(frameShape, extrudeSettings);
+        frameGeo.center();
+
+        this.phoneBodyMaterial = new THREE.MeshPhysicalMaterial({
+            color: 0xb5c9b9,
+            metalness: 0.75,
+            roughness: 0.35,
+            clearcoat: 0.30,
+            clearcoatRoughness: 0.15,
+            name: "IPhone11_Aluminium_Frame"
+        });
+        this.frameMesh = new THREE.Mesh(frameGeo, this.phoneBodyMaterial);
+        group.add(this.frameMesh);
+
+        // Nút bấm vật lý
+        this.addPhysicalButtons(group, width, height, depth);
+
+        // 2. Mặt lưng kính bóng bẩy với logo Apple ở chính giữa
+        const backGlassGeo = new THREE.PlaneGeometry(width * 0.965, height * 0.965);
+        this.backGlassMaterial = new THREE.MeshPhysicalMaterial({
+            color: 0xc7d8ca,
+            roughness: 0.08,
+            metalness: 0.06,
+            clearcoat: 1.0,
+            clearcoatRoughness: 0.03,
+            transmission: 0.04,
+            ior: 1.52,
+            envMapIntensity: 2.0,
+            name: "IPhone11_Back_Glass"
+        });
+        const backGlassMesh = new THREE.Mesh(backGlassGeo, this.backGlassMaterial);
+        backGlassMesh.position.z = depth / 2 + 0.0020;
+        group.add(backGlassMesh);
+
+        // 3. Màn hình trước Liquid Retina HD có tai thỏ
+        const screenGeo = new THREE.PlaneGeometry(width * 0.955, height * 0.955);
+        const screenMat = new THREE.MeshStandardMaterial({
+            color: 0x050505,
+            roughness: 0.05,
+            metalness: 0.92
+        });
+        const screenMesh = new THREE.Mesh(screenGeo, screenMat);
+        screenMesh.rotation.y = Math.PI;
+        screenMesh.position.z = -depth / 2 - 0.0020;
+        group.add(screenMesh);
+
+        // 4. Cụm camera vuông bo góc chứa 2 mắt kính dọc lớn (Dual Camera Plateau)
+        const bumpW = 0.0295;
+        const bumpH = 0.0320;
+        const bumpR = 0.0080;
+        const bumpX = -width * 0.260;
+        const bumpY = height * 0.340;
+
+        this.cameraPlateauInfo = {
+            x: bumpX,
+            y: bumpY,
+            width: bumpW + 0.0016,
+            height: bumpH + 0.0016,
+            radius: bumpR + 0.0006
+        };
+
+        const bumpShape = this.createRoundedRectShape(bumpW, bumpH, bumpR);
+        const bumpGeo = new THREE.ExtrudeGeometry(bumpShape, {
+            depth: 0.0014,
+            bevelEnabled: true,
+            bevelSegments: 4,
+            bevelSize: 0.0008,
+            bevelThickness: 0.0008
+        });
+        bumpGeo.center();
+
+        const camPlateauMat = new THREE.MeshPhysicalMaterial({
+            color: 0xb9cbbe,
+            roughness: 0.12,
+            metalness: 0.15,
+            clearcoat: 0.85
+        });
+        const camPlateau = new THREE.Mesh(bumpGeo, camPlateauMat);
+        camPlateau.position.set(bumpX, bumpY, depth / 2 + 0.0026);
+        group.add(camPlateau);
+
+        // Hai ống kính lớn (Top 12MP Wide, Bottom 12MP Ultra-Wide)
+        const lenses = [
+            { y: bumpY + bumpH * 0.22 },
+            { y: bumpY - bumpH * 0.22 }
+        ];
+
+        lenses.forEach(pos => {
+            const ringGeo = new THREE.CylinderGeometry(0.0062, 0.0062, 0.0012, 32);
+            const ringMat = new THREE.MeshStandardMaterial({
+                color: 0xa8baa9,
+                roughness: 0.2,
+                metalness: 0.9
+            });
+            const ring = new THREE.Mesh(ringGeo, ringMat);
+            ring.rotation.x = Math.PI / 2;
+            ring.position.set(bumpX - bumpW * 0.14, pos.y, depth / 2 + 0.0034);
+            group.add(ring);
+
+            const lensGeo = new THREE.SphereGeometry(0.0042, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2);
+            const lensMat = new THREE.MeshPhysicalMaterial({
+                color: 0x090a14,
+                roughness: 0.02,
+                transmission: 0.35,
+                ior: 1.77,
+                clearcoat: 1.0
+            });
+            const lens = new THREE.Mesh(lensGeo, lensMat);
+            lens.position.set(bumpX - bumpW * 0.14, pos.y, depth / 2 + 0.0040);
+            group.add(lens);
+        });
+
+        // Đèn Flash True Tone ở bên phải
+        const flashGeo = new THREE.CylinderGeometry(0.0024, 0.0024, 0.0008, 20);
+        const flashMat = new THREE.MeshStandardMaterial({ color: 0xfffae6, roughness: 0.2 });
+        const flash = new THREE.Mesh(flashGeo, flashMat);
+        flash.rotation.x = Math.PI / 2;
+        flash.position.set(bumpX + bumpW * 0.24, bumpY + bumpH * 0.22, depth / 2 + 0.0032);
+        group.add(flash);
+
+        group.rotation.set(0, 0, 0);
+        group.position.set(0, 0, 0);
+
+        this.phoneMesh = group;
+        this.phoneGroup.add(this.phoneMesh);
+        this.phoneModelBaseSize = new THREE.Vector3(width, height, depth);
+        this.phoneModelBaseScale = this.phoneMesh.scale.clone();
+        console.log(`Đã tạo mô hình 3D iPhone 11`);
+    }
+
+    // ==================================================================================
+    // TẠO MÔ HÌNH SAMSUNG GALAXY S24 ULTRA (CẠNH VUÔNG VẮC, 4 ỐNG KÍNH THẲNG HÀNG)
+    // ==================================================================================
+    createPhotorealisticSamsungS24() {
+        if (this.phoneMesh) {
+            this.phoneGroup.remove(this.phoneMesh);
+            this.phoneMesh = null;
+        }
+
+        this.phoneMeshUsesRotatedAxes = false;
+        this.isIPhoneX = false;
+        this.options.phoneSlug = 'samsung-s24-ultra';
+
+        const group = new THREE.Group();
+        group.name = "Phone_Model_Group_SamsungS24";
+
+        const width = 0.0790;
+        const height = 0.1623;
+        const depth = 0.0086;
+        const radius = 0.0025; // Góc vuông đặc trưng Galaxy Ultra
+
+        this.phoneDimensions = { width, height, depth, radius };
+
+        // Khung Titan vuông vức
+        const frameShape = this.createRoundedRectShape(width, height, radius);
+        const frameGeo = new THREE.ExtrudeGeometry(frameShape, {
+            depth: depth,
+            bevelEnabled: true,
+            bevelSegments: 4,
+            bevelSize: 0.0012,
+            bevelThickness: 0.0012
+        });
+        frameGeo.center();
+
+        this.phoneBodyMaterial = new THREE.MeshPhysicalMaterial({
+            color: 0x72716e,
+            metalness: 0.92,
+            roughness: 0.28,
+            name: "S24_Titanium_Frame"
+        });
+        this.frameMesh = new THREE.Mesh(frameGeo, this.phoneBodyMaterial);
+        group.add(this.frameMesh);
+
+        // Mặt lưng Gorilla Armor nhám chống chói
+        const backGeo = new THREE.PlaneGeometry(width * 0.97, height * 0.97);
+        this.backGlassMaterial = new THREE.MeshPhysicalMaterial({
+            color: 0x7c7a76,
+            roughness: 0.45,
+            metalness: 0.12,
+            clearcoat: 0.4
+        });
+        const backMesh = new THREE.Mesh(backGeo, this.backGlassMaterial);
+        backMesh.position.z = depth / 2 + 0.0020;
+        group.add(backMesh);
+
+        // Cụm 4 camera rời thẳng hàng
+        const bumpW = 0.0270;
+        const bumpH = 0.0590;
+        const bumpX = -width * 0.280;
+        const bumpY = height * 0.285;
+
+        this.cameraPlateauInfo = {
+            x: bumpX,
+            y: bumpY,
+            width: bumpW + 0.0016,
+            height: bumpH + 0.0016,
+            radius: 0.0060
+        };
+
+        const camYList = [
+            bumpY + bumpH * 0.34,
+            bumpY,
+            bumpY - bumpH * 0.34
+        ];
+
+        camYList.forEach(yPos => {
+            const ringGeo = new THREE.CylinderGeometry(0.0068, 0.0068, 0.0015, 32);
+            const ringMat = new THREE.MeshStandardMaterial({ color: 0x5a5855, metalness: 0.95, roughness: 0.15 });
+            const ring = new THREE.Mesh(ringGeo, ringMat);
+            ring.rotation.x = Math.PI / 2;
+            ring.position.set(bumpX - 0.004, yPos, depth / 2 + 0.0030);
+            group.add(ring);
+        });
+
+        group.rotation.set(0, 0, 0);
+        group.position.set(0, 0, 0);
+
+        this.phoneMesh = group;
+        this.phoneGroup.add(this.phoneMesh);
+        this.phoneModelBaseSize = new THREE.Vector3(width, height, depth);
+        this.phoneModelBaseScale = this.phoneMesh.scale.clone();
+        console.log(`Đã tạo mô hình 3D Samsung S24 Ultra`);
+    }
     // Thêm các nút bấm vật lý (Power, Action, Volume) vào thân máy
     addPhysicalButtons(group, w, h, d) {
         const btnMat = this.phoneBodyMaterial;
@@ -1395,11 +1755,14 @@ export class TryOnStudio {
         const dims = this.phoneDimensions || { width: 0.0706, height: 0.1466, depth: 0.00825, radius: 0.0092 };
         const cam = this.cameraPlateauInfo || { x: -0.016, y: 0.048, width: 0.035, height: 0.040, radius: 0.007 };
 
+        const caseBackThickness = 0.0006;
         const caseW = dims.width + 0.0008;
         const caseH = dims.height + 0.0008;
         const caseRadius = dims.radius + 0.0004;
 
-        // Keep only a thin clearance around the phone so the case does not look oversized.
+        // Viền ốp ôm trọn thân điện thoại, chiều sâu = depth + margin trước/sau
+        const rimDepth = dims.depth + 0.0040;
+
         const rimShape = this.createRoundedRectShape(caseW, caseH, caseRadius);
         const innerWidth = dims.width + 0.0002;
         const innerHeight = dims.height + 0.0002;
@@ -1411,7 +1774,7 @@ export class TryOnStudio {
             Math.max(0.001, dims.radius - 0.0002)
         ));
         const rimGeo = new THREE.ExtrudeGeometry(rimShape, {
-            depth: dims.depth + 0.0004,
+            depth: rimDepth,
             bevelEnabled: false,
             steps: 1
         });
@@ -1443,7 +1806,7 @@ export class TryOnStudio {
 
         // Extrude mặt lưng ốp
         const caseBackGeo = new THREE.ExtrudeGeometry(caseBackShape, {
-            depth: 0.0006,
+            depth: caseBackThickness,
             bevelEnabled: true,
             bevelSegments: 2,
             steps: 1,
@@ -1490,6 +1853,7 @@ export class TryOnStudio {
         caseGroup.name = "Custom_3D_Case_Group";
 
         const rimMesh = new THREE.Mesh(rimGeo, this.caseEdgeMaterial);
+        rimMesh.position.z = 0;
         caseGroup.add(rimMesh);
 
         const backMesh = new THREE.Mesh(caseBackGeo, this.caseMaterial);
@@ -1612,11 +1976,23 @@ export class TryOnStudio {
         this.currentCaseOptions = productOptions;
         if (!this.caseMaterial) return;
 
-        const modelUrl = productOptions?.modelUrl || this.getDefaultCaseModelUrl();
+        let modelUrl = productOptions?.modelUrl || this.getDefaultCaseModelUrl();
+        // Chỉ tải model 3D GLB nếu tương thích với dòng máy đang hiển thị
+        if (modelUrl) {
+            const isCaseForIPhoneX = modelUrl.toLowerCase().includes('iphone-x');
+            const isCurrentIPhoneX = (this.options.phoneSlug === 'iphone-x');
+            if (isCaseForIPhoneX && !isCurrentIPhoneX) {
+                // Tuyệt đối không dùng ốp GLB của iPhone X cho iPhone 15/16/11 để tránh lệch camera
+                modelUrl = '';
+            }
+        }
+
         if (modelUrl && modelUrl !== this.caseModelUrl) {
             this.caseModelLoadPromise = this.loadCaseModel(modelUrl);
-        } else if (!modelUrl && this.caseModelUrl) {
-            this.buildFitted3DCase();
+        } else if (!modelUrl) {
+            if (!this.caseMesh || this.caseModelUrl) {
+                this.buildFitted3DCase();
+            }
         }
 
         const ctx = this.caseCtx;

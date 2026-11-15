@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.StaticFiles;
 using TH3.Models;
@@ -32,6 +33,8 @@ builder.Services.AddControllersWithViews();
 
 builder.Services.AddRazorPages();
 
+builder.Services.AddTransient<IEmailSender, IdentityEmailSender>();
+
 // SESSION
 
 builder.Services.AddDistributedMemoryCache();
@@ -61,6 +64,12 @@ builder.Services.AddScoped<RecommendationService>();
 builder.Services.AddSignalR();
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    dbContext.Database.Migrate();
+}
 
 // PIPELINE
 
