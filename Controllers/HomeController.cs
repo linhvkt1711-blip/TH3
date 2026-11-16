@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Security.Claims;
 using TH3.Models;
 using TH3.Services;
@@ -36,8 +38,17 @@ namespace TH3.Controllers
             decimal? minPrice,
             decimal? maxPrice)
         {
-            var productsQuery =
-                await _productRepository.GetAllAsync();
+            IEnumerable<Product> productsQuery;
+            try
+            {
+                productsQuery = await _productRepository.GetAllAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Không thể tải sản phẩm cho trang chủ.");
+                ViewBag.HomePageWarning = "Không kết nối được cơ sở dữ liệu nên danh sách sản phẩm tạm thời chưa thể hiển thị.";
+                return View(Enumerable.Empty<Product>());
+            }
 
             var products =
                 productsQuery.AsQueryable();

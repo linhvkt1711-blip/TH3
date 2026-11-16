@@ -80,7 +80,7 @@ export class TryOnStudio {
         // 2. Camera: Căn góc 3/4 mặt lưng chuẩn xác 100% giống như hình ảnh mẫu
         const aspect = this.container.clientWidth / this.container.clientHeight;
         this.camera = new THREE.PerspectiveCamera(36, aspect, 0.01, 10);
-        this.camera.position.set(0.065, 0.008, 0.30);
+        this.camera.position.set(0.065, 0.008, 0.42);
 
         // 3. WebGL Renderer với ACES Filmic Tone Mapping chân thực
         this.renderer = new THREE.WebGLRenderer({
@@ -184,22 +184,31 @@ export class TryOnStudio {
             'iphone-11': [0.0757, 0.1509, 0.0083],
             'iphone-11-prm': [0.0778, 0.1580, 0.0081],
             'iphone-12': [0.0715, 0.1467, 0.0074],
+            'iphone-12-prm': [0.0781, 0.1608, 0.0074],
             'iphone-13': [0.0715, 0.1467, 0.00765],
             'iphone-13-prm': [0.0781, 0.1608, 0.00765],
             'iphone-14-prm': [0.0776, 0.1607, 0.00785],
             'iphone-15-pro': [0.0706, 0.1466, 0.00825],
+            'iphone-15-prm': [0.0767, 0.1599, 0.00825],
             'iphone-16-pro-max': [0.0776, 0.1630, 0.00825],
+            'iphone-18': [0.0716, 0.1476, 0.0078],
+            'iphone-18-prm': [0.0776, 0.1630, 0.00825],
             'samsung-s24-ultra': [0.0790, 0.1623, 0.00860]
         };
 
-        // Only declare GLB files that are confirmed to exist.
         const modelPaths = {
             'iphone-x': '/models/phones/iphone-x/iphone_x.glb',
+            'iphone-11': '/models/phones/iphone-11.glb',
+            'iphone-11-prm': '/models/phones/iphone-11-prm.glb',
+            'iphone-12': '/models/phones/iphone-12.glb',
+            'iphone-12-prm': '/models/phones/iphone-12-prm.glb',
             'iphone-13-prm': '/models/phones/iphone-13-prm.glb',
             'iphone-14-prm': '/models/phones/iphone-14-prm.glb',
             'iphone-15-pro': '/models/phones/iphone-15-pro.glb',
             'iphone-15-prm': '/models/phones/iphone-15-prm.glb',
-            'iphone-16-pro-max': '/models/phones/iphone-16-pro-max-no-sim-desert-titanium.glb'
+            'iphone-16-pro-max': '/models/phones/iphone-16-pro-max-no-sim-desert-titanium.glb',
+            'iphone-18': '/models/phones/iphone-18.glb',
+            'iphone-18-prm': '/models/phones/iphone-18-prm.glb'
         };
 
         const isIPhone = Object.hasOwn(iphoneDimensions, phoneSlug);
@@ -225,17 +234,37 @@ export class TryOnStudio {
 
             if (isIPhoneXModel) {
                 gltf.scene.rotation.y = Math.PI;
-            } else if (phoneSlug === 'iphone-13-prm' || phoneSlug === 'iphone-14-prm') {
+            } else if (
+                phoneSlug === 'iphone-11'
+                || phoneSlug === 'iphone-11-prm'
+                || phoneSlug === 'iphone-13-prm'
+                || phoneSlug === 'iphone-14-prm'
+                || phoneSlug === 'iphone-18'
+            ) {
                 gltf.scene.rotation.y = 0;
+            } else if (
+                phoneSlug === 'iphone-12'
+                || phoneSlug === 'iphone-12-prm'
+                || phoneSlug === 'iphone-18-prm'
+            ) {
+                gltf.scene.rotation.y = Math.PI;
             } else if (isIPhone) {
                 gltf.scene.rotation.y = -Math.PI / 2;
             }
 
             gltf.scene.updateMatrixWorld(true);
 
-            const innerBounds = new THREE.Box3().setFromObject(gltf.scene);
+            let innerBounds = new THREE.Box3().setFromObject(gltf.scene);
+            let innerSize = innerBounds.getSize(new THREE.Vector3());
+
+            if (innerSize.x > innerSize.y) {
+                gltf.scene.rotation.z -= Math.PI / 2;
+                gltf.scene.updateMatrixWorld(true);
+                innerBounds = new THREE.Box3().setFromObject(gltf.scene);
+                innerSize = innerBounds.getSize(new THREE.Vector3());
+            }
+
             const innerCenter = innerBounds.getCenter(new THREE.Vector3());
-            const innerSize = innerBounds.getSize(new THREE.Vector3());
 
             if (innerSize.x <= 0 || innerSize.y <= 0 || innerSize.z <= 0) {
                 throw new Error(`Kich thuoc GLB khong hop le: ${glbPath}`);
@@ -297,6 +326,14 @@ export class TryOnStudio {
                     height: 0.0350,
                     radius: 0.0080
                 };
+            } else if (phoneSlug === 'iphone-12-prm') {
+                this.cameraPlateauInfo = {
+                    x: -dimensions[0] * 0.235,
+                    y: dimensions[1] * 0.350,
+                    width: 0.0350,
+                    height: 0.0370,
+                    radius: 0.0080
+                };
             } else if (phoneSlug === 'iphone-12') {
                 // 5. iPhone 12: Cụm vuông 2 mắt dọc viền phẳng
                 this.cameraPlateauInfo = {
@@ -332,6 +369,22 @@ export class TryOnStudio {
                     width: 0.0314,
                     height: 0.0330,
                     radius: 0.0075
+                };
+            } else if (phoneSlug === 'iphone-18') {
+                this.cameraPlateauInfo = {
+                    x: -dimensions[0] * 0.178,
+                    y: dimensions[1] * 0.352,
+                    width: dimensions[0] * 0.45,
+                    height: dimensions[1] * 0.21,
+                    radius: 0.0070
+                };
+            } else if (phoneSlug === 'iphone-18-prm') {
+                this.cameraPlateauInfo = {
+                    x: -dimensions[0] * 0.02,
+                    y: dimensions[1] * 0.36,
+                    width: dimensions[0] * 0.80,
+                    height: dimensions[1] * 0.23,
+                    radius: 0.0090
                 };
             } else if (phoneSlug === 'samsung-s24-ultra') {
                 // Samsung S24 Ultra: Cụm 4 camera rời thẳng hàng
@@ -416,15 +469,15 @@ export class TryOnStudio {
             console.log(`Da tai mo hinh dien thoai: ${phoneSlug}`);
             return true;
         } catch (error) {
-            console.error(`Khong tai duoc mo hinh 3D "${phoneSlug}".`, error);
+            console.warn(`Đang dùng mô hình 3D dự phòng cho "${phoneSlug}".`, error);
 
             if (phoneSlug === 'iphone-x') {
                 this.createPhotorealisticIPhoneX();
                 return true;
             }
 
-            if (phoneSlug === 'iphone-11') {
-                this.createPhotorealisticIPhone11();
+            if (phoneSlug === 'iphone-11' || phoneSlug === 'iphone-13' || phoneSlug === 'iphone-xr') {
+                this.createPhotorealisticIPhone11('#c7d8ca', phoneSlug);
                 return true;
             }
 
@@ -438,6 +491,7 @@ export class TryOnStudio {
                 return true;
             }
 
+            console.error(`Không tải được mô hình 3D "${phoneSlug}".`, error);
             throw new Error(`Chua co mo hinh 3D ho tro cho thiet bi: ${phoneSlug}`);
         }
     }
@@ -1455,7 +1509,7 @@ export class TryOnStudio {
     // ==================================================================================
     // TẠO MÔ HÌNH IPHONE 11 CHÂN THỰC (CỤM 2 CAMERA VUÔNG, VIỀN NHÔM BO CONG)
     // ==================================================================================
-    createPhotorealisticIPhone11(colorHex = '#c7d8ca') {
+    createPhotorealisticIPhone11(colorHex = '#c7d8ca', phoneSlug = 'iphone-11') {
         if (this.phoneMesh) {
             this.phoneGroup.remove(this.phoneMesh);
             this.phoneMesh = null;
@@ -1463,16 +1517,18 @@ export class TryOnStudio {
 
         this.phoneMeshUsesRotatedAxes = false;
         this.isIPhoneX = false;
-        this.options.phoneSlug = 'iphone-11';
+        this.options.phoneSlug = phoneSlug;
 
         const group = new THREE.Group();
-        group.name = "Phone_Model_Group_IPhone11";
+        group.name = `Phone_Model_Group_${phoneSlug}`;
 
-        // Kích thước chuẩn CAD iPhone 11 (75.7mm x 150.9mm x 8.3mm)
-        const width = 0.0757;
-        const height = 0.1509;
-        const depth = 0.0083;
-        const radius = 0.0095;
+        const modelSpecs = {
+            'iphone-xr': { width: 0.0757, height: 0.1509, depth: 0.0083, radius: 0.0095, cameraWidth: 0.0220, cameraHeight: 0.0240 },
+            'iphone-11': { width: 0.0757, height: 0.1509, depth: 0.0083, radius: 0.0095, cameraWidth: 0.0295, cameraHeight: 0.0320 },
+            'iphone-13': { width: 0.0715, height: 0.1467, depth: 0.00765, radius: 0.0090, cameraWidth: 0.0305, cameraHeight: 0.0325 }
+        };
+        const { width, height, depth, radius, cameraWidth: bumpW, cameraHeight: bumpH } =
+            modelSpecs[phoneSlug] || modelSpecs['iphone-11'];
 
         this.phoneDimensions = { width, height, depth, radius };
 
@@ -1533,9 +1589,7 @@ export class TryOnStudio {
         group.add(screenMesh);
 
         // 4. Cụm camera vuông bo góc chứa 2 mắt kính dọc lớn (Dual Camera Plateau)
-        const bumpW = 0.0295;
-        const bumpH = 0.0320;
-        const bumpR = 0.0080;
+        const bumpR = phoneSlug === 'iphone-xr' ? bumpW / 2 : 0.0080;
         const bumpX = -width * 0.260;
         const bumpY = height * 0.340;
 
@@ -1568,10 +1622,17 @@ export class TryOnStudio {
         group.add(camPlateau);
 
         // Hai ống kính lớn (Top 12MP Wide, Bottom 12MP Ultra-Wide)
-        const lenses = [
-            { y: bumpY + bumpH * 0.22 },
-            { y: bumpY - bumpH * 0.22 }
-        ];
+        const lenses = phoneSlug === 'iphone-xr'
+            ? [{ x: bumpX, y: bumpY }]
+            : phoneSlug === 'iphone-13'
+                ? [
+                    { x: bumpX - bumpW * 0.18, y: bumpY + bumpH * 0.18 },
+                    { x: bumpX + bumpW * 0.18, y: bumpY - bumpH * 0.18 }
+                ]
+                : [
+                    { x: bumpX - bumpW * 0.14, y: bumpY + bumpH * 0.22 },
+                    { x: bumpX - bumpW * 0.14, y: bumpY - bumpH * 0.22 }
+                ];
 
         lenses.forEach(pos => {
             const ringGeo = new THREE.CylinderGeometry(0.0062, 0.0062, 0.0012, 32);
@@ -1582,7 +1643,7 @@ export class TryOnStudio {
             });
             const ring = new THREE.Mesh(ringGeo, ringMat);
             ring.rotation.x = Math.PI / 2;
-            ring.position.set(bumpX - bumpW * 0.14, pos.y, depth / 2 + 0.0034);
+            ring.position.set(pos.x, pos.y, depth / 2 + 0.0034);
             group.add(ring);
 
             const lensGeo = new THREE.SphereGeometry(0.0042, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2);
@@ -1594,7 +1655,7 @@ export class TryOnStudio {
                 clearcoat: 1.0
             });
             const lens = new THREE.Mesh(lensGeo, lensMat);
-            lens.position.set(bumpX - bumpW * 0.14, pos.y, depth / 2 + 0.0040);
+            lens.position.set(pos.x, pos.y, depth / 2 + 0.0040);
             group.add(lens);
         });
 
@@ -1603,7 +1664,11 @@ export class TryOnStudio {
         const flashMat = new THREE.MeshStandardMaterial({ color: 0xfffae6, roughness: 0.2 });
         const flash = new THREE.Mesh(flashGeo, flashMat);
         flash.rotation.x = Math.PI / 2;
-        flash.position.set(bumpX + bumpW * 0.24, bumpY + bumpH * 0.22, depth / 2 + 0.0032);
+        flash.position.set(
+            phoneSlug === 'iphone-xr' ? bumpX : bumpX + bumpW * 0.24,
+            phoneSlug === 'iphone-xr' ? bumpY - bumpH * 0.62 : bumpY + bumpH * 0.22,
+            depth / 2 + 0.0032
+        );
         group.add(flash);
 
         group.rotation.set(0, 0, 0);
@@ -1613,7 +1678,7 @@ export class TryOnStudio {
         this.phoneGroup.add(this.phoneMesh);
         this.phoneModelBaseSize = new THREE.Vector3(width, height, depth);
         this.phoneModelBaseScale = this.phoneMesh.scale.clone();
-        console.log(`Đã tạo mô hình 3D iPhone 11`);
+        console.log(`Đã tạo mô hình 3D ${phoneSlug}`);
     }
 
     // ==================================================================================
@@ -2268,7 +2333,9 @@ export class TryOnStudio {
 
     // Reset góc nhìn về chuẩn 3/4 mặt lưng giống ảnh mẫu
     resetCameraView() {
-        this.camera.position.set(0.065, 0.008, 0.30);
+        this.phoneGroup.position.set(0, 0, 0);
+        this.phoneGroup.rotation.set(0.04, -0.32, 0);
+        this.camera.position.set(0.065, 0.008, 0.42);
         this.controls.target.set(0, 0, 0);
         this.controls.update();
     }

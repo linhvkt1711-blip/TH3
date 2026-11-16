@@ -3,3 +3,9 @@ __pycache__/
 *$py.class
 *.sourcelink.json
 *.build.ex.cache
+
+# AI Datasets & Runs
+AI_Service/dataset*/
+AI_Service/runs/
+runs/
+AI_Service/weights/*candidate*

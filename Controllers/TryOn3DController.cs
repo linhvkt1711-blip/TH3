@@ -27,34 +27,98 @@ namespace TH3.Controllers
         // GET: /TryOn3D/Studio?productId=1&deviceSlug=iphone-15-pro
         public async Task<IActionResult> Studio(int? productId, string? deviceSlug)
         {
-            // 1. Tìm danh mục Ốp lưng
-            var caseCategory = await _context.Categories
-                .FirstOrDefaultAsync(c => c.Name.Contains("Ốp") || c.Name.Contains("Case"));
+            Category? caseCategory = null;
+            List<Product> allCases = new List<Product>();
 
-            int caseCatId = caseCategory?.Id ?? 0;
+            try
+            {
+                // 1. Tìm danh mục Ốp lưng
+                caseCategory = await _context.Categories
+                    .FirstOrDefaultAsync(c => c.Name.Contains("Ốp") || c.Name.Contains("Case"));
 
-            // 2. Lấy danh sách TẤT CẢ các mẫu ốp lưng trong hệ thống để hiển thị trên Carousel Dock
-            var caseQuery = _context.Products
-                .Include(p => p.Category)
-                .Include(p => p.ProductImages)
-                .Where(p => (caseCatId > 0 && p.CategoryId == caseCatId) || p.Name.Contains("Ốp") || p.Name.Contains("Case"));
+                int caseCatId = caseCategory?.Id ?? 0;
 
-            var allCases = await caseQuery.OrderByDescending(p => p.Id).ToListAsync();
+                // 2. Lấy danh sách TẤT CẢ các mẫu ốp lưng trong hệ thống để hiển thị trên Carousel Dock
+                var caseQuery = _context.Products
+                    .Include(p => p.Category)
+                    .Include(p => p.ProductImages)
+                    .Where(p => (caseCatId > 0 && p.CategoryId == caseCatId) || p.Name.Contains("Ốp") || p.Name.Contains("Case"));
+
+                allCases = await caseQuery.OrderByDescending(p => p.Id).ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Cảnh báo DB Studio] Không đọc được sản phẩm từ DB: {ex.Message}. Sử dụng danh sách ốp mẫu.");
+            }
+
+            // Dữ liệu mẫu dự phòng khi database chưa cấu hình hoặc tạm ngắt
+            if (allCases.Count == 0)
+            {
+                allCases = new List<Product>
+                {
+                    new Product
+                    {
+                        Id = 1,
+                        ProductCode = "IPX01",
+                        Name = "Ốp Lưng iPhone X Chống Sốc Trong Suốt",
+                        Price = 180000,
+                        CompatibleDeviceCode = "IPX01",
+                        MaterialType = "Silicone"
+                    },
+                    new Product
+                    {
+                        Id = 2,
+                        ProductCode = "OL01",
+                        Name = "Ốp Lưng MagSafe Chống Sốc Titan Tự Nhiên",
+                        Price = 250000,
+                        CompatibleDeviceCode = "IP01",
+                        MaterialType = "Silicone"
+                    },
+                    new Product
+                    {
+                        Id = 3,
+                        ProductCode = "IP18",
+                        Name = "Ốp Lưng iPhone 18 Titan Siêu Mỏng Đỏ Cherry",
+                        Price = 390000,
+                        CompatibleDeviceCode = "IP18",
+                        MaterialType = "Leather"
+                    },
+                    new Product
+                    {
+                        Id = 4,
+                        ProductCode = "IP05",
+                        Name = "Ốp Lưng iPhone 16 Pro Max Armor Chống Va Đập",
+                        Price = 450000,
+                        CompatibleDeviceCode = "IP05",
+                        MaterialType = "Silicone"
+                    }
+                };
+            }
 
             Product? activeProduct = null;
 
             // Nếu người dùng chọn 1 sản phẩm cụ thể
             if (productId.HasValue && productId.Value > 0)
             {
-                var requestedProduct = await _context.Products
-                    .Include(p => p.Category)
-                    .Include(p => p.ProductImages)
-                    .FirstOrDefaultAsync(p => p.Id == productId.Value);
+                Product? requestedProduct = null;
+                try
+                {
+                    requestedProduct = await _context.Products
+                        .Include(p => p.Category)
+                        .Include(p => p.ProductImages)
+                        .FirstOrDefaultAsync(p => p.Id == productId.Value);
+                }
+                catch { }
+
+                if (requestedProduct == null)
+                {
+                    requestedProduct = allCases.FirstOrDefault(p => p.Id == productId.Value);
+                }
 
                 if (requestedProduct != null)
                 {
-                    // Nếu sản phẩm được chọn đúng là Ốp lưng
-                    if (requestedProduct.CategoryId == caseCatId || requestedProduct.Name.Contains("Ốp") || requestedProduct.ProductCode.StartsWith("OL"))
+                    int caseCatId = caseCategory?.Id ?? 0;
+                    if (requestedProduct.CategoryId == caseCatId || requestedProduct.Name.Contains("Ốp") || requestedProduct.ProductCode.StartsWith("OL") || requestedProduct.ProductCode.StartsWith("IP"))
                     {
                         activeProduct = requestedProduct;
                         if (string.IsNullOrWhiteSpace(deviceSlug))
@@ -64,15 +128,11 @@ namespace TH3.Controllers
                     }
                     else
                     {
-                        // Nếu người dùng bấm từ trang Điện thoại (ví dụ iPhone 15 Pro, S24...)
-                        // Tự động gán dòng máy mục tiêu theo điện thoại đó
                         if (string.IsNullOrEmpty(deviceSlug))
                         {
                             deviceSlug = GetPhoneSlug(requestedProduct.ProductCode)
                                 ?? GetPhoneSlug(requestedProduct.Name);
                         }
-
-                        // Và chọn mẫu ốp đầu tiên làm sản phẩm đang thử
                         activeProduct = allCases.FirstOrDefault();
                     }
                 }
@@ -112,7 +172,15 @@ namespace TH3.Controllers
                 && !string.IsNullOrWhiteSpace(activeProduct.CompatibleDeviceCode)
                 && !activeProduct.CompatibleDeviceCode.Equals(phone.DeviceCode, StringComparison.OrdinalIgnoreCase))
             {
-                activeProduct = compatibleCases.FirstOrDefault() ?? activeProduct;
+                activeProduct = compatibleCases.FirstOrDefault() ?? new Product
+                {
+                    Id = 9999,
+                    ProductCode = "OL01",
+                    Name = $"Ốp lưng mẫu tương thích {phone.Name}",
+                    Price = 0,
+                    CompatibleDeviceCode = phone.DeviceCode,
+                    MaterialType = "Silicone"
+                };
             }
             else if (activeProduct.Id == 9999 && compatibleCases.Count > 0)
             {
@@ -159,6 +227,9 @@ namespace TH3.Controllers
             if (phoneCode == "IP12") // iPhone 12 / 12 Pro
                 return (productName.Contains("iphone 12") || productName.Contains("ip12")) && !productName.Contains("mini") && !productName.Contains("max");
 
+            if (phoneCode == "IP12PM")
+                return productName.Contains("12 pro max") || productName.Contains("12 prm");
+
             if (phoneCode == "IP13") // iPhone 13
                 return (productName.Contains("iphone 13") || productName.Contains("ip13")) && !productName.Contains("pro") && !productName.Contains("max");
 
@@ -173,6 +244,12 @@ namespace TH3.Controllers
 
             if (phoneCode == "IP05") // iPhone 16 Pro Max
                 return productName.Contains("16 pro max") || productName.Contains("16 prm");
+
+            if (phoneCode == "IP18")
+                return productName.Contains("iphone 18") && !productName.Contains("pro max") && !productName.Contains("prm");
+
+            if (phoneCode == "IP18PM")
+                return productName.Contains("18 pro max") || productName.Contains("18 prm");
 
             if (phoneCode == "SS01") // Samsung S24 Ultra
                 return productName.Contains("s24 ultra") || productName.Contains("s24u");
@@ -193,6 +270,8 @@ namespace TH3.Controllers
                 return "iphone-11-prm";
             if (codeOrName.Equals("IP11", StringComparison.OrdinalIgnoreCase) || codeOrName.Equals("IP1101", StringComparison.OrdinalIgnoreCase) || codeOrName.Contains("iPhone 11", StringComparison.OrdinalIgnoreCase))
                 return "iphone-11";
+            if (codeOrName.Equals("IP12PM", StringComparison.OrdinalIgnoreCase) || codeOrName.Contains("12 Pro Max", StringComparison.OrdinalIgnoreCase) || codeOrName.Contains("12 PRM", StringComparison.OrdinalIgnoreCase))
+                return "iphone-12-prm";
             if (codeOrName.Equals("IP12", StringComparison.OrdinalIgnoreCase) || codeOrName.Contains("iPhone 12", StringComparison.OrdinalIgnoreCase))
                 return "iphone-12";
             if (codeOrName.Equals("IP13PM", StringComparison.OrdinalIgnoreCase) || codeOrName.Contains("13 Pro Max", StringComparison.OrdinalIgnoreCase))
@@ -201,6 +280,10 @@ namespace TH3.Controllers
                 return "iphone-13";
             if (codeOrName.Equals("IP14PM", StringComparison.OrdinalIgnoreCase) || codeOrName.Contains("14 Pro Max", StringComparison.OrdinalIgnoreCase))
                 return "iphone-14-prm";
+            if (codeOrName.Equals("IP18PM", StringComparison.OrdinalIgnoreCase) || codeOrName.Contains("18 Pro Max", StringComparison.OrdinalIgnoreCase) || codeOrName.Contains("18 PRM", StringComparison.OrdinalIgnoreCase))
+                return "iphone-18-prm";
+            if (codeOrName.Equals("IP18", StringComparison.OrdinalIgnoreCase) || codeOrName.Contains("iPhone 18", StringComparison.OrdinalIgnoreCase))
+                return "iphone-18";
             if (codeOrName.Equals("IP05", StringComparison.OrdinalIgnoreCase) || codeOrName.Contains("iPhone 16", StringComparison.OrdinalIgnoreCase))
                 return "iphone-16-pro-max";
             if (codeOrName.Equals("SS01", StringComparison.OrdinalIgnoreCase) || codeOrName.Contains("Samsung", StringComparison.OrdinalIgnoreCase) || codeOrName.Contains("S24", StringComparison.OrdinalIgnoreCase))
@@ -221,16 +304,67 @@ namespace TH3.Controllers
                 return BadRequest(new { message = "Mã thiết bị không được hỗ trợ." });
             }
 
-            var caseCategory = await _context.Categories
-                .FirstOrDefaultAsync(c => c.Name.Contains("Ốp") || c.Name.Contains("Case"));
-            var caseCatId = caseCategory?.Id ?? 0;
-            var allCandidateCases = await _context.Products
-                .Include(p => p.Category)
-                .Where(p => (caseCatId > 0 && p.CategoryId == caseCatId)
-                    || p.Name.Contains("Ốp")
-                    || p.Name.Contains("Case"))
-                .OrderByDescending(p => p.Id)
-                .ToListAsync();
+            var allCandidateCases = new List<Product>();
+            try
+            {
+                var caseCategory = await _context.Categories
+                    .FirstOrDefaultAsync(c => c.Name.Contains("Ốp") || c.Name.Contains("Case"));
+                var caseCatId = caseCategory?.Id ?? 0;
+                allCandidateCases = await _context.Products
+                    .Include(p => p.Category)
+                    .Where(p => (caseCatId > 0 && p.CategoryId == caseCatId)
+                        || p.Name.Contains("Ốp")
+                        || p.Name.Contains("Case"))
+                    .OrderByDescending(p => p.Id)
+                    .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Cảnh báo DB] GetCompatibleCases fallback: {ex.Message}");
+            }
+
+            if (allCandidateCases.Count == 0)
+            {
+                allCandidateCases = new List<Product>
+                {
+                    new Product
+                    {
+                        Id = 1,
+                        ProductCode = "IPX01",
+                        Name = "Ốp Lưng iPhone X Chống Sốc Trong Suốt",
+                        Price = 180000,
+                        CompatibleDeviceCode = "IPX01",
+                        MaterialType = "Silicone"
+                    },
+                    new Product
+                    {
+                        Id = 2,
+                        ProductCode = "OL01",
+                        Name = "Ốp Lưng MagSafe Chống Sốc Titan",
+                        Price = 250000,
+                        CompatibleDeviceCode = "IP01",
+                        MaterialType = "Silicone"
+                    },
+                    new Product
+                    {
+                        Id = 3,
+                        ProductCode = "IP18",
+                        Name = "Ốp Lưng iPhone 18 Titan Đỏ Cherry",
+                        Price = 390000,
+                        CompatibleDeviceCode = "IP18",
+                        MaterialType = "Leather"
+                    },
+                    new Product
+                    {
+                        Id = 4,
+                        ProductCode = "IP05",
+                        Name = "Ốp Lưng iPhone 16 Pro Max Armor",
+                        Price = 450000,
+                        CompatibleDeviceCode = "IP05",
+                        MaterialType = "Silicone"
+                    }
+                };
+            }
 
             // Chỉ lấy các ốp khớp chính xác với dòng điện thoại này
             var products = allCandidateCases
@@ -253,7 +387,7 @@ namespace TH3.Controllers
 
         // POST: /TryOn3D/DetectPhoneModel
         [HttpPost]
-        public async Task<IActionResult> DetectPhoneModel(IFormFile file)
+        public async Task<IActionResult> DetectPhoneModel(IFormFile file, string source = "camera")
         {
             if (file == null || file.Length == 0)
             {
@@ -269,6 +403,8 @@ namespace TH3.Controllers
                 using var formContent = new MultipartFormDataContent();
                 using var stream = file.OpenReadStream();
                 formContent.Add(new StreamContent(stream), "file", file.FileName);
+                var detectionSource = string.Equals(source, "upload", StringComparison.OrdinalIgnoreCase) ? "upload" : "camera";
+                formContent.Add(new StringContent(detectionSource), "source");
 
                 var response = await client.PostAsync("http://localhost:5001/api/detect-phone-model", formContent);
                 var jsonStr = await response.Content.ReadAsStringAsync();

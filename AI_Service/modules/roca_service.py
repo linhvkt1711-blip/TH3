@@ -39,19 +39,39 @@ class PhonePoseEstimationPipeline:
         # Database kích thước chuẩn CAD của các dòng máy (Dài x Rộng x Dày tính bằng mét)
         if HAS_NUMPY:
             self.cad_database = {
+                "iphone-x": np.array([0.0709, 0.1436, 0.0077]),
+                "iphone-xr": np.array([0.0757, 0.1509, 0.0083]),
+                "iphone-11": np.array([0.0757, 0.1509, 0.0083]),
+                "iphone-11-prm": np.array([0.0778, 0.1580, 0.0081]),
+                "iphone-12": np.array([0.0715, 0.1467, 0.0074]),
+                "iphone-12-prm": np.array([0.0781, 0.1608, 0.0074]),
+                "iphone-13": np.array([0.0715, 0.1467, 0.00765]),
+                "iphone-13-prm": np.array([0.0781, 0.1608, 0.00765]),
+                "iphone-14-prm": np.array([0.0776, 0.1607, 0.00785]),
                 "iphone-15-pro": np.array([0.0706, 0.1466, 0.00825]),
                 "iphone-15-prm": np.array([0.0767, 0.1599, 0.00825]),
-                "samsung-s24-ultra": np.array([0.0790, 0.1623, 0.00860]),
                 "iphone-16-pro-max": np.array([0.0776, 0.1630, 0.00825]),
-                "iphone-x": np.array([0.0709, 0.1436, 0.0077])
+                "iphone-18": np.array([0.0716, 0.1476, 0.0078]),
+                "iphone-18-prm": np.array([0.0776, 0.1630, 0.00825]),
+                "samsung-s24-ultra": np.array([0.0790, 0.1623, 0.00860])
             }
         else:
             self.cad_database = {
+                "iphone-x": [0.0709, 0.1436, 0.0077],
+                "iphone-xr": [0.0757, 0.1509, 0.0083],
+                "iphone-11": [0.0757, 0.1509, 0.0083],
+                "iphone-11-prm": [0.0778, 0.1580, 0.0081],
+                "iphone-12": [0.0715, 0.1467, 0.0074],
+                "iphone-12-prm": [0.0781, 0.1608, 0.0074],
+                "iphone-13": [0.0715, 0.1467, 0.00765],
+                "iphone-13-prm": [0.0781, 0.1608, 0.00765],
+                "iphone-14-prm": [0.0776, 0.1607, 0.00785],
                 "iphone-15-pro": [0.0706, 0.1466, 0.00825],
                 "iphone-15-prm": [0.0767, 0.1599, 0.00825],
-                "samsung-s24-ultra": [0.0790, 0.1623, 0.00860],
                 "iphone-16-pro-max": [0.0776, 0.1630, 0.00825],
-                "iphone-x": [0.0709, 0.1436, 0.0077]
+                "iphone-18": [0.0716, 0.1476, 0.0078],
+                "iphone-18-prm": [0.0776, 0.1630, 0.00825],
+                "samsung-s24-ultra": [0.0790, 0.1623, 0.00860]
             }
 
     def infer(self, cropped_bgr_image, matched_model_id=None):

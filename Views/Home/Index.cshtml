@@ -101,6 +101,13 @@
 
 </style>
 
+@if (!string.IsNullOrWhiteSpace(ViewBag.HomePageWarning as string))
+{
+    <div class="alert alert-warning mt-3" role="alert">
+        @ViewBag.HomePageWarning
+    </div>
+}
+
 <!-- DANH MỤC -->
 
 <div class="row g-4 mb-5 text-center justify-content-center row-cols-2 row-cols-md-6">
@@ -331,7 +338,7 @@
             </p>
         </div>
         <div class="col-md-4 text-md-end mt-3 mt-md-0">
-            <a href="/TryOn3D/Studio" class="btn btn-warning btn-lg fw-bold px-4 py-3 text-dark shadow-sm text-decoration-none">
+            <a asp-controller="TryOn3D" asp-action="Studio" class="btn btn-warning btn-lg fw-bold px-4 py-3 text-dark shadow-sm text-decoration-none">
                 <i class="fa fa-cube me-2"></i>Vào Phòng Thử 3D
             </a>
         </div>

@@ -11,7 +11,7 @@ if current_dir not in sys.path:
 try:
     import cv2  # type: ignore
     import numpy as np  # type: ignore
-    from fastapi import FastAPI, UploadFile, File  # type: ignore
+    from fastapi import FastAPI, UploadFile, File, Form  # type: ignore
     from fastapi.responses import JSONResponse  # type: ignore
     from fastapi.middleware.cors import CORSMiddleware  # type: ignore
     HAS_FASTAPI = True
@@ -69,21 +69,39 @@ except Exception as error:
     print(f"Không tải được model YOLO: {YOLO_ERROR}", file=sys.stderr)
 
 PHONE_NAMES = {
+    "iphone-x": "iPhone X / Xs (iPhone 10)",
+    "iphone-xr": "iPhone XR",
+    "iphone-11": "iPhone 11",
+    "iphone-11-prm": "iPhone 11 Pro Max",
+    "iphone-12": "iPhone 12",
+    "iphone-12-prm": "iPhone 12 Pro Max",
+    "iphone-13": "iPhone 13",
+    "iphone-13-prm": "iPhone 13 Pro Max",
+    "iphone-14-prm": "iPhone 14 Pro Max",
     "iphone-15-pro": "iPhone 15 Pro",
     "iphone-15-prm": "iPhone 15 Pro Max",
-    "samsung-s24-ultra": "Samsung Galaxy S24 Ultra",
     "iphone-16-pro-max": "iPhone 16 Pro Max",
-    "iphone-11": "iPhone 11",
-    "iphone-x": "iPhone X"
+    "iphone-18": "iPhone 18",
+    "iphone-18-prm": "iPhone 18 Pro Max",
+    "samsung-s24-ultra": "Samsung Galaxy S24 Ultra"
 }
 
 PHONE_DEVICE_CODES = {
+    "iphone-x": "IPX01",
+    "iphone-xr": "IPXR",
+    "iphone-11": "IP11",
+    "iphone-11-prm": "IP11PM",
+    "iphone-12": "IP12",
+    "iphone-12-prm": "IP12PM",
+    "iphone-13": "IP13",
+    "iphone-13-prm": "IP13PM",
+    "iphone-14-prm": "IP14PM",
     "iphone-15-pro": "IP01",
     "iphone-15-prm": "IP02",
-    "samsung-s24-ultra": "SS01",
     "iphone-16-pro-max": "IP05",
-    "iphone-11": "IP11",
-    "iphone-x": "IPX01"
+    "iphone-18": "IP18",
+    "iphone-18-prm": "IP18PM",
+    "samsung-s24-ultra": "SS01"
 }
 
 if app is not None:
@@ -97,7 +115,8 @@ if app is not None:
         }
 
     @app.post("/api/detect-phone-model")
-    async def detect_phone_model(file: UploadFile = File(...)):
+    async def detect_phone_model(file: UploadFile = File(...), source: str = Form("camera")):
+        source = "upload" if source.strip().lower() == "upload" else "camera"
         contents = await file.read()
         nparr = np.frombuffer(contents, np.uint8)
         image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
@@ -107,27 +126,66 @@ if app is not None:
 
         h, w, _ = image.shape
 
-        # 1. Phát hiện Bounding Box qua YOLO hoặc Fallback Contour/Viewfinder
+        # 1. Phát hiện Bounding Box và dòng máy qua YOLO hoặc Fallback
+        direct_model_id = None
         if detect_phone_bbox is not None:
-            bbox, confidence = detect_phone_bbox(image, yolo_model)
+            bbox, confidence, direct_model_id = detect_phone_bbox(image, yolo_model)
         else:
-            bbox = [0, 0, w, h]
-            confidence = 0.85
+            return {
+                "success": False,
+                "phone_detected": False,
+                "model_recognized": False,
+                "message": "Bộ nhận diện điện thoại chưa được tải. Hãy kiểm tra AI Service."
+            }
 
-        # 2. Phân loại thông minh dòng máy (iPhone X, iPhone 16 Pro Max, iPhone 15 Pro, Samsung S24 Ultra)
+        if bbox is None:
+            message = (
+                "Không nhận diện được điện thoại trong ảnh đã tải lên. Hãy chọn ảnh chỉ có một điện thoại, "
+                "thấy rõ mặt lưng và cụm camera; ảnh ghép mặt trước/mặt sau có thể khó nhận diện. "
+                "Bạn cũng có thể chọn model 3D thủ công."
+                if source == "upload"
+                else "Không phát hiện điện thoại trong khung camera. Hãy đưa rõ mặt lưng và cụm camera vào khung hình rồi thử lại."
+            )
+            return {
+                "success": False,
+                "phone_detected": False,
+                "model_recognized": False,
+                "message": message
+            }
+
+        # 2. Phân loại chi tiết và ánh xạ model 3D
         if classify_phone is not None:
-            cls_result = classify_phone(image, bbox)
+            cls_result = classify_phone(
+                image,
+                bbox,
+                direct_model_id=direct_model_id,
+                direct_confidence=confidence
+            )
+            if cls_result is None:
+                message = (
+                    "Đã thấy điện thoại trong ảnh nhưng chưa xác định được dòng máy. Hãy tải ảnh mặt lưng rõ hơn "
+                    "hoặc chọn model 3D thủ công."
+                    if source == "upload"
+                    else "Chưa nhận diện rõ cụm camera. Hãy chụp gần hơn, đủ sáng và đặt mặt lưng điện thoại hướng vào camera."
+                )
+                return {
+                    "success": False,
+                    "phone_detected": False,
+                    "model_recognized": False,
+                    "message": message
+                }
             detected_phone_id = cls_result["model_id"]
             phone_model_name = cls_result["model_name"]
             device_code = cls_result["device_code"]
             case_model_url = cls_result["case_model_url"]
-            confidence = max(confidence, cls_result["confidence"])
+            confidence = cls_result["confidence"]
         else:
-            detected_phone_id = "iphone-x"
-            phone_model_name = "iPhone X"
-            device_code = "IPX01"
-            case_model_url = "/models/cases/iphone-x/scene.gltf"
-            confidence = 0.90
+            return {
+                "success": False,
+                "phone_detected": False,
+                "model_recognized": False,
+                "message": "Bộ phân loại model chưa được tải. Hãy kiểm tra AI Service."
+            }
 
         # Cắt ảnh điện thoại để đưa vào ROCA 6DoF Alignment
         x1, y1, x2, y2 = bbox

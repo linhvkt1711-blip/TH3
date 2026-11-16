@@ -127,7 +127,7 @@
 
     <!-- Top Navigation Bar -->
     <div class="top-bar-studio">
-        <a href="/Home/Index" class="btn btn-outline-light glass-studio-panel py-2 px-3 text-decoration-none">
+        <a asp-area="" asp-controller="Home" asp-action="Index" class="btn btn-outline-light glass-studio-panel py-2 px-3 text-decoration-none">
             <i class="fa fa-arrow-left me-1"></i> Trang chủ
         </a>
 
@@ -194,19 +194,28 @@
             <option value="iphone-11">3. iPhone 11</option>
             <option value="iphone-11-prm">4. iPhone 11 Pro Max</option>
             <option value="iphone-12">5. iPhone 12</option>
-            <option value="iphone-13">6. iPhone 13</option>
-            <option value="iphone-13-prm">7. iPhone 13 Pro Max</option>
-            <option value="iphone-14-prm">8. iPhone 14 Pro Max</option>
-            <option value="iphone-15-pro">9. iPhone 15 Pro</option>
-            <option value="iphone-16-pro-max">10. iPhone 16 Pro Max</option>
-            <option value="samsung-s24-ultra">11. Samsung Galaxy S24 Ultra</option>
+            <option value="iphone-12-prm">6. iPhone 12 Pro Max</option>
+            <option value="iphone-13">7. iPhone 13</option>
+            <option value="iphone-13-prm">8. iPhone 13 Pro Max</option>
+            <option value="iphone-14-prm">9. iPhone 14 Pro Max</option>
+            <option value="iphone-15-pro">10. iPhone 15 Pro</option>
+            <option value="iphone-15-prm">11. iPhone 15 Pro Max</option>
+            <option value="iphone-16-pro-max">12. iPhone 16 Pro Max</option>
+            <option value="iphone-18">13. iPhone 18</option>
+            <option value="iphone-18-prm">14. iPhone 18 Pro Max</option>
+            <option value="samsung-s24-ultra">15. Samsung Galaxy S24 Ultra</option>
         </select>
         <button type="button" id="btnLoadPhoneModel" class="btn btn-sm btn-warning w-100 mt-2 mb-3">Tải điện thoại vào Studio</button>
+        <button type="button" id="btnUploadPhoneImage" class="btn btn-sm btn-outline-warning w-100 mb-2">
+            <i class="fa fa-image me-1"></i> Nhận diện ảnh có sẵn
+        </button>
+        <input type="file" id="phoneImageInput" accept="image/*" class="d-none" />
+        <div id="imageDetectionStatus" class="small text-warning text-center mb-3" role="status"></div>
 
         <div class="small text-white-50 text-center mb-2 fw-bold">KHẮC TÊN LÊN ỐP</div>
         <input type="text" id="txtCustomEngraving" class="form-control form-control-sm bg-dark text-white border-secondary text-center" 
                placeholder="Nhập tên của bạn..." maxlength="18" />
-        <details class="small text-white-50 mt-3">
+        <details id="modelSourceDetails" class="small text-white-50 mt-3">
             <summary>Nguồn mô hình iPhone X</summary>
             <div class="mt-2">
                 Điện thoại: <a href="https://sketchfab.com/3d-models/iphone-x-663d66bb8cf94964959a7b8323193bf9" target="_blank" rel="noopener">Manfred Kostka</a> (CC BY 4.0).
@@ -218,7 +227,7 @@
     <!-- Bottom Carousel Dock: Thông tin ốp đang thử & Đổi mẫu nhanh -->
     <div class="bottom-dock">
         <!-- Thông tin mẫu ốp đang active & nút mua nhanh -->
-        <div class="glass-studio-panel d-flex justify-content-between align-items-center px-4 py-2">
+        <div id="dockCaseProduct" class="glass-studio-panel d-flex justify-content-between align-items-center px-4 py-2 @(product?.Id == 9999 ? "d-none" : "")">
             <div>
                 <h5 id="dockCaseTitle" class="m-0 fw-bold">@(product?.Name ?? "Ốp Lưng iPhone 15 Pro MagSafe Trong Suốt Chống Ố (OL01)")</h5>
                 <span id="dockCasePrice" class="text-warning fw-bold fs-5">@(product?.Price.ToString("N0") ?? "350,000")₫</span>
@@ -299,11 +308,6 @@
                 </div>
 
                 <div class="modal-footer border-secondary d-flex justify-content-between">
-                    <label for="fallbackFileInput" class="btn btn-outline-light btn-sm">
-                        <i class="fa fa-upload me-1"></i> Tải ảnh từ máy
-                    </label>
-                    <input type="file" id="fallbackFileInput" accept="image/*" class="d-none" />
-
                     <button type="button" id="btnSnapPhoto" class="btn btn-danger px-4 fw-bold">
                         <i class="fa fa-camera me-1"></i> Chụp & Nhận diện
                     </button>
@@ -315,12 +319,16 @@
                             <option value="iphone-11">3. iPhone 11</option>
                             <option value="iphone-11-prm">4. iPhone 11 Pro Max</option>
                             <option value="iphone-12">5. iPhone 12</option>
-                            <option value="iphone-13">6. iPhone 13</option>
-                            <option value="iphone-13-prm">7. iPhone 13 Pro Max</option>
-                            <option value="iphone-14-prm">8. iPhone 14 Pro Max</option>
-                            <option value="iphone-15-pro">9. iPhone 15 Pro</option>
-                            <option value="iphone-16-pro-max">10. iPhone 16 Pro Max</option>
-                            <option value="samsung-s24-ultra">11. Samsung Galaxy S24 Ultra</option>
+                            <option value="iphone-12-prm">6. iPhone 12 Pro Max</option>
+                            <option value="iphone-13">7. iPhone 13</option>
+                            <option value="iphone-13-prm">8. iPhone 13 Pro Max</option>
+                            <option value="iphone-14-prm">9. iPhone 14 Pro Max</option>
+                            <option value="iphone-15-pro">10. iPhone 15 Pro</option>
+                            <option value="iphone-15-prm">11. iPhone 15 Pro Max</option>
+                            <option value="iphone-16-pro-max">12. iPhone 16 Pro Max</option>
+                            <option value="iphone-18">13. iPhone 18</option>
+                            <option value="iphone-18-prm">14. iPhone 18 Pro Max</option>
+                            <option value="samsung-s24-ultra">15. Samsung Galaxy S24 Ultra</option>
                         </select>
                         <button type="button" id="btnUseDetectionModel" class="btn btn-warning text-nowrap">Dùng model 3D này</button>
                     </div>
@@ -332,7 +340,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script type="module">
-        import { TryOnStudio } from '/js/tryon-studio.js?v=4';
+        import { TryOnStudio } from '/js/tryon-studio.js?v=12';
 
         // 1. Khởi tạo 3D Studio với đồ họa Photorealistic
         const initialCode = '@(product?.ProductCode ?? "OL01")';
@@ -349,6 +357,12 @@
         window.studio.ready.then(() => {
             document.getElementById('lblExploded').textContent =
                 window.studio.isExploded ? 'Lắp ốp' : 'Tách ốp';
+            const hasCompatibleCase = @(product?.Id != 9999 ? "true" : "false");
+            if (!hasCompatibleCase) {
+                window.studio.toggleCaseVisibility();
+                document.getElementById('lblCaseVisibility').textContent = 'Đeo ốp vào máy';
+                document.getElementById('badgeActiveCaseCode').textContent = 'Mã: --';
+            }
         });
 
         // 2. Render màu thân máy Titanium
@@ -407,6 +421,7 @@
             const modelUrl = elem.dataset.model || '';
             const compatibleCode = elem.dataset.compatible || '';
 
+            document.getElementById('dockCaseProduct').classList.remove('d-none');
             document.getElementById('badgeActiveCaseCode').textContent = `Mã: ${code}`;
             document.getElementById('dockCaseTitle').textContent = title;
             document.getElementById('dockCasePrice').textContent = `${price}₫`;
@@ -425,6 +440,7 @@
 
             const cases = await response.json();
             const carousel = document.getElementById('caseCarousel');
+            const caseProductDock = document.getElementById('dockCaseProduct');
             carousel.replaceChildren();
 
             cases.forEach(item => {
@@ -469,11 +485,22 @@
             });
 
             if (cases.length) {
+                caseProductDock.classList.remove('d-none');
+                if (!studio.isCaseVisible) {
+                    studio.toggleCaseVisibility();
+                    document.getElementById('lblCaseVisibility').textContent = 'Gỡ ốp (Máy trần)';
+                }
                 const selectedCard = Array.from(carousel.children)
                     .find(card => Number(card.dataset.id) === preferredId)
                     || carousel.firstElementChild;
                 selectedCard.click();
             } else {
+                caseProductDock.classList.add('d-none');
+                document.getElementById('badgeActiveCaseCode').textContent = 'Mã: --';
+                if (studio.isCaseVisible) {
+                    studio.toggleCaseVisibility();
+                    document.getElementById('lblCaseVisibility').textContent = 'Đeo ốp vào máy';
+                }
                 const empty = document.createElement('div');
                 empty.className = 'text-white-50 p-3';
                 empty.textContent = 'Chưa có sản phẩm ốp lưng tương thích trong kho.';
@@ -487,20 +514,25 @@
             'iphone-11': { name: 'iPhone 11', code: 'IP11' },
             'iphone-11-prm': { name: 'iPhone 11 Pro Max', code: 'IP11PM' },
             'iphone-12': { name: 'iPhone 12', code: 'IP12' },
+            'iphone-12-prm': { name: 'iPhone 12 Pro Max', code: 'IP12PM' },
             'iphone-13': { name: 'iPhone 13', code: 'IP13' },
             'iphone-13-prm': { name: 'iPhone 13 Pro Max', code: 'IP13PM' },
             'iphone-14-prm': { name: 'iPhone 14 Pro Max', code: 'IP14PM' },
             'iphone-15-pro': { name: 'iPhone 15 Pro', code: 'IP01' },
+            'iphone-15-prm': { name: 'iPhone 15 Pro Max', code: 'IP02' },
             'iphone-16-pro-max': { name: 'iPhone 16 Pro Max', code: 'IP05' },
+            'iphone-18': { name: 'iPhone 18', code: 'IP18' },
+            'iphone-18-prm': { name: 'iPhone 18 Pro Max', code: 'IP18PM' },
             'samsung-s24-ultra': { name: 'Samsung Galaxy S24 Ultra', code: 'SS01' }
         };
         const initialPhoneSlug = '@(phone?.Slug ?? "")';
+        document.getElementById('modelSourceDetails').hidden = initialPhoneSlug !== 'iphone-x';
         if (phoneModels[initialPhoneSlug]) {
             document.getElementById('phoneModelPicker').value = initialPhoneSlug;
             document.getElementById('detectionPhoneModel').value = initialPhoneSlug;
         }
 
-        async function usePhoneModel(phoneSlug, pose = null, caseModelUrl = '') {
+        async function usePhoneModel(phoneSlug, caseModelUrl = '') {
             if (!phoneSlug) throw new Error('Hãy chọn model 3D điện thoại trước.');
             const modelInfo = phoneModels[phoneSlug];
             if (!modelInfo) throw new Error('Model điện thoại chưa được hỗ trợ trong Studio.');
@@ -508,7 +540,7 @@
             const status = document.getElementById('studioDetectionStatus');
             status.textContent = `Đang tải mô hình ${modelInfo.name}...`;
             await studio.loadPhoneModel(phoneSlug);
-            if (pose) studio.applyDetectionPose(pose);
+            studio.resetCameraView();
             studio.buildFitted3DCase();
             await refreshCompatibleCases(modelInfo.code);
             const activeCaseId = Number(document.querySelector('.case-thumb-card.active')?.dataset.id);
@@ -557,6 +589,7 @@
             document.getElementById('lblDeviceName').textContent = `${modelInfo.name} (${modelInfo.code})`;
             document.getElementById('phoneModelPicker').value = phoneSlug;
             document.getElementById('detectionPhoneModel').value = phoneSlug;
+            document.getElementById('modelSourceDetails').hidden = phoneSlug !== 'iphone-x';
             status.textContent = `Đã tải mô hình 3D ${modelInfo.name} và danh sách ốp tương thích.`;
             if (cameraModal) cameraModal.hide();
             stopCameraStream();
@@ -675,21 +708,32 @@
                     return;
                 }
                 const file = new File([blob], "camera_snap.jpg", { type: "image/jpeg" });
-                executeYoloDetection(file);
+                executeYoloDetection(file, 'camera');
             }, 'image/jpeg');
         });
 
-        document.getElementById('fallbackFileInput').addEventListener('change', function(e) {
-            if (e.target.files && e.target.files[0]) {
-                executeYoloDetection(e.target.files[0]);
-            }
+        const phoneImageInput = document.getElementById('phoneImageInput');
+        document.getElementById('btnUploadPhoneImage').addEventListener('click', function() {
+            phoneImageInput.click();
         });
 
-        async function executeYoloDetection(file) {
-            document.getElementById('scanningEffect').classList.remove('d-none');
-            document.getElementById('studioDetectionStatus').textContent = 'Đang gửi ảnh lên AI...';
+        phoneImageInput.addEventListener('change', function(e) {
+            if (e.target.files && e.target.files[0]) {
+                executeYoloDetection(e.target.files[0], 'upload');
+            }
+            phoneImageInput.value = '';
+        });
+
+        async function executeYoloDetection(file, source = 'camera') {
+            const isUpload = source === 'upload';
+            const statusElement = document.getElementById(isUpload ? 'imageDetectionStatus' : 'studioDetectionStatus');
+            if (!isUpload) {
+                document.getElementById('scanningEffect').classList.remove('d-none');
+            }
+            statusElement.textContent = isUpload ? 'Đang phân tích ảnh đã chọn...' : 'Đang gửi ảnh camera lên AI...';
             const formData = new FormData();
             formData.append('file', file);
+            formData.append('source', source);
 
             try {
                 const response = await fetch('/TryOn3D/DetectPhoneModel', {
@@ -698,27 +742,49 @@
                 });
                 const result = await response.json();
 
+                if (!response.ok) {
+                    statusElement.textContent =
+                        result.message || `Máy chủ AI trả về lỗi (${response.status}).`;
+                    return;
+                }
+
                 if (result.success) {
-                    const targetModel = result.phone_model_id || 'iphone-x';
-                    const targetName = result.phone_model_name || (targetModel === 'iphone-x' ? 'iPhone X' : 'iPhone 16 Pro Max');
-                    const confPercent = ((result.confidence || 0.95) * 100).toFixed(1);
-                    
+                    const targetModel = result.phone_model_id;
+                    if (!targetModel || !phoneModels[targetModel]) {
+                        statusElement.textContent = isUpload
+                            ? 'AI chưa xác định được dòng máy. Hãy chọn model 3D trong bảng bên phải.'
+                            : 'AI chưa xác định được dòng máy. Hãy chọn model 3D trong bảng bên phải để tiếp tục.';
+                        return;
+                    }
+                    const targetName = result.phone_model_name || phoneModels[targetModel]?.name || targetModel;
+                    const confidence = Number(result.confidence);
+                    const confPercent = (
+                        (Number.isFinite(confidence) ? Math.min(1, Math.max(0, confidence)) : 0) * 100
+                    ).toFixed(1);
+                    statusElement.textContent = `Đã nhận diện ${targetName} (${confPercent}%).`;
                     document.getElementById('aiToastMessage').textContent =
-                        `AI nhận diện ${targetName} (${confPercent}%). Đang đồng bộ mô hình 3D...`;
+                        `AI nhận diện ${targetName} — độ tin cậy ${confPercent}%. Đang đồng bộ mô hình 3D...`;
                     const toast = document.getElementById('aiDetectionToast');
                     toast.style.display = 'flex';
                     setTimeout(() => { toast.style.display = 'none'; }, 4500);
 
-                    await usePhoneModel(targetModel, result.pose_6dof, result.case_model_url);
+                    await usePhoneModel(targetModel, result.case_model_url);
                 } else {
-                    document.getElementById('studioDetectionStatus').textContent =
+                    statusElement.textContent =
                         result.message || `AI không xử lý được ảnh (${response.status}).`;
                 }
             } catch (err) {
-                document.getElementById('studioDetectionStatus').textContent = `Lỗi kết nối AI: ${err.message}`;
+                const message = err instanceof TypeError && err.message.includes('Failed to fetch')
+                    ? (isUpload
+                        ? 'Không kết nối được AI để phân tích ảnh. Hãy kiểm tra dịch vụ AI cổng 5001.'
+                        : 'Mất kết nối với web hoặc AI Service. Hãy kiểm tra ứng dụng web và AI Service cổng 5001 đang chạy.')
+                    : `Lỗi nhận diện điện thoại: ${err.message}`;
+                statusElement.textContent = message;
                 console.error('Lỗi nhận diện điện thoại:', err);
             } finally {
-                document.getElementById('scanningEffect').classList.add('d-none');
+                if (!isUpload) {
+                    document.getElementById('scanningEffect').classList.add('d-none');
+                }
             }
         }
 

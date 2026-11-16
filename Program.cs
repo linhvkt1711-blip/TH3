@@ -67,8 +67,15 @@ var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
 {
-    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    dbContext.Database.Migrate();
+    try
+    {
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        dbContext.Database.Migrate();
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"[Cảnh báo DB] Không kết nối được SQL Server: {ex.Message}. Web vẫn khởi động để thử tính năng 3D Studio.");
+    }
 }
 
 // PIPELINE

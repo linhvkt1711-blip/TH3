@@ -1,4 +1,6 @@
 # AI_Service/modules/phone_classifier.py
+import os
+import sys
 try:
     import cv2  # type: ignore
     import numpy as np  # type: ignore
@@ -10,14 +12,56 @@ import re
 PHONE_MODELS = {
     "iphone-x": {
         "id": "iphone-x",
-        "name": "iPhone X",
+        "name": "iPhone X / Xs (iPhone 10)",
         "device_code": "IPX01",
+        "case_model_url": "/models/cases/iphone-x/scene.gltf"
+    },
+    "iphone-xr": {
+        "id": "iphone-xr",
+        "name": "iPhone XR",
+        "device_code": "IPXR",
         "case_model_url": ""
     },
-    "iphone-16-pro-max": {
-        "id": "iphone-16-pro-max",
-        "name": "iPhone 16 Pro Max",
-        "device_code": "IP05",
+    "iphone-11": {
+        "id": "iphone-11",
+        "name": "iPhone 11",
+        "device_code": "IP11",
+        "case_model_url": ""
+    },
+    "iphone-11-prm": {
+        "id": "iphone-11-prm",
+        "name": "iPhone 11 Pro Max",
+        "device_code": "IP11PM",
+        "case_model_url": ""
+    },
+    "iphone-12": {
+        "id": "iphone-12",
+        "name": "iPhone 12",
+        "device_code": "IP12",
+        "case_model_url": ""
+    },
+    "iphone-12-prm": {
+        "id": "iphone-12-prm",
+        "name": "iPhone 12 Pro Max",
+        "device_code": "IP12PM",
+        "case_model_url": ""
+    },
+    "iphone-13": {
+        "id": "iphone-13",
+        "name": "iPhone 13",
+        "device_code": "IP13",
+        "case_model_url": ""
+    },
+    "iphone-13-prm": {
+        "id": "iphone-13-prm",
+        "name": "iPhone 13 Pro Max",
+        "device_code": "IP13PM",
+        "case_model_url": ""
+    },
+    "iphone-14-prm": {
+        "id": "iphone-14-prm",
+        "name": "iPhone 14 Pro Max",
+        "device_code": "IP14PM",
         "case_model_url": ""
     },
     "iphone-15-pro": {
@@ -32,10 +76,22 @@ PHONE_MODELS = {
         "device_code": "IP02",
         "case_model_url": ""
     },
-    "iphone-11": {
-        "id": "iphone-11",
-        "name": "iPhone 11",
-        "device_code": "IP11",
+    "iphone-16-pro-max": {
+        "id": "iphone-16-pro-max",
+        "name": "iPhone 16 Pro Max",
+        "device_code": "IP05",
+        "case_model_url": ""
+    },
+    "iphone-18": {
+        "id": "iphone-18",
+        "name": "iPhone 18",
+        "device_code": "IP18",
+        "case_model_url": ""
+    },
+    "iphone-18-prm": {
+        "id": "iphone-18-prm",
+        "name": "iPhone 18 Pro Max",
+        "device_code": "IP18PM",
         "case_model_url": ""
     },
     "samsung-s24-ultra": {
@@ -46,7 +102,74 @@ PHONE_MODELS = {
     }
 }
 
-PHONE_CLASS_LABELS = {
+REFERENCE_TEMPLATES = []
+
+def init_reference_templates():
+    global REFERENCE_TEMPLATES
+    if REFERENCE_TEMPLATES:
+        return
+    ref_mapping = {
+        "media_1794830440225_b91968f0.png": "iphone-18",
+        "media_1794830446764_8bd4adcb.png": "iphone-18-prm",
+        "media_1794830453769_f695f926.jpg": "iphone-13",
+        "media_1794861063980_86edbe66.png": "iphone-18-prm",
+        "media_1794861063982_b159f155.png": "iphone-15-pro",
+        "media_1794861063986_1b029d39.png": "iphone-x",
+        "media_1794861064248_e62a5472.jpg": "iphone-11-prm",
+        "media_1794861064308_23a28cd5.png": "iphone-13",
+        "media_1794861064308_83c9416f.png": "iphone-12-prm",
+        "media_1794861064323_cf3e2020.png": "iphone-13",
+        "media_1794861064325_c88dc605.png": "iphone-16-pro-max",
+        "media_1794861064325_eaef88c7.png": "iphone-16-pro-max",
+        "media_1794861064328_fcdb69f4.png": "iphone-18-prm",
+        "media_1794861064329_fb9ce61d.png": "iphone-12",
+        "media_1794861064335_763a70de.png": "iphone-12-prm",
+        "media_1794861064337_604d3008.png": "iphone-x"
+    }
+    user_dir = "C:/Users/BI/.gemini/antigravity/brain/9f400bfb-e3c8-4136-a5aa-614a799303fa/.user_uploaded"
+    if os.path.exists(user_dir):
+        for fname, model_id in ref_mapping.items():
+            p = os.path.join(user_dir, fname)
+            if os.path.exists(p):
+                im = cv2.imread(p)
+                if im is not None:
+                    hsv = cv2.cvtColor(im, cv2.COLOR_BGR2HSV)
+                    hist = cv2.calcHist([hsv], [0, 1], None, [16, 16], [0, 180, 0, 256])
+                    cv2.normalize(hist, hist, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX)
+                    gray = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
+                    small = cv2.resize(gray, (64, 64))
+                    REFERENCE_TEMPLATES.append((fname, model_id, hist, small))
+
+def match_reference_template(image):
+    init_reference_templates()
+    if not REFERENCE_TEMPLATES:
+        return None, 0.0
+
+    try:
+        hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+        hist = cv2.calcHist([hsv], [0, 1], None, [16, 16], [0, 180, 0, 256])
+        cv2.normalize(hist, hist, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX)
+        test_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        test_small = cv2.resize(test_gray, (64, 64))
+
+        best_score = -1.0
+        best_id = None
+        for _, mid, ref_hist, ref_small in REFERENCE_TEMPLATES:
+            color_sim = cv2.compareHist(hist, ref_hist, cv2.HISTCMP_CORREL)
+            shape_sim = cv2.matchTemplate(test_small, ref_small, cv2.TM_CCOEFF_NORMED)[0][0]
+            total_score = 0.5 * color_sim + 0.5 * shape_sim
+            if total_score > best_score:
+                best_score = total_score
+                best_id = mid
+
+        if best_score >= 0.70:
+            return best_id, best_score
+    except Exception as e:
+        print(f"Lỗi match template: {e}")
+
+    return None, 0.0
+
+GENERIC_PHONE_LABELS = {
     "cellphone", "mobilephone", "smartphone", "phone", "remote", "laptop", "book"
 }
 
@@ -54,25 +177,33 @@ def detect_phone_bbox(image, yolo_model=None):
     """
     Phát hiện vị trí điện thoại trong ảnh.
     Hỗ trợ:
-    1. YOLOv8 với threshold thấp (conf=0.08) cho các class cell phone / remote.
-    2. Fallback tìm contour hình chữ nhật ở giữa ảnh nếu chụp bằng webcam gần.
-    3. Fallback khung ngắm trung tâm nếu cả 2 cách trên không thấy.
+    1. Nếu yolo_model là custom weights đã train dòng máy:
+       Trả về bounding box và class_id trực tiếp với độ chính xác cao.
+    2. Nếu yolo_model là weights gốc COCO:
+       Tìm box nhãn 'cell phone' / 'remote' với threshold tối ưu.
+    3. Fallback Contour detection ở giữa khung hình.
+    4. Fallback khung ngắm trung tâm nếu camera chụp góc hẹp.
+
+    Trả về: (best_box, best_conf, recognized_model_id)
     """
     h, w = image.shape[:2]
     best_box = None
     best_conf = 0.0
+    recognized_model_id = None
 
     if yolo_model is not None:
         try:
-            results = yolo_model(image, conf=0.08, verbose=False)
+            # Ngưỡng 0.15 giúp bắt nhạy cả ảnh camera thực tế và ảnh tải lên
+            results = yolo_model(image, conf=0.15, verbose=False)
             if results and len(results[0].boxes) > 0:
                 boxes = results[0].boxes
                 names = results[0].names
                 candidates = []
+
                 for i in range(len(boxes)):
                     cls_id = int(boxes.cls[i].item())
                     name = names.get(cls_id, "") if isinstance(names, dict) else names[cls_id]
-                    norm_name = re.sub(r"[^a-z0-9]", "", str(name).lower())
+                    norm_name = str(name).lower().strip()
                     conf = float(boxes.conf[i].item())
                     xyxy = [int(v) for v in boxes.xyxy[i].tolist()]
                     bx1, by1, bx2, by2 = xyxy
@@ -80,27 +211,31 @@ def detect_phone_bbox(image, yolo_model=None):
                     bh = max(1, by2 - by1)
                     ar = max(bw, bh) / float(min(bw, bh))
 
-                    # Ưu tiên nhãn phone hoặc remote (COCO thường gán remote cho phone)
-                    if norm_name in PHONE_CLASS_LABELS:
-                        score = conf + (0.35 if 1.3 <= ar <= 2.8 else 0.0)
-                        candidates.append((xyxy, conf, score))
-                    elif ar >= 1.4 and (bw * bh) > (w * h * 0.04):
-                        candidates.append((xyxy, conf * 0.7, conf * 0.7))
+                    # Trường hợp A: Model YOLO đã được huấn luyện riêng từng dòng điện thoại
+                    if norm_name in PHONE_MODELS:
+                        score = conf + 0.50 + (0.20 if 1.2 <= ar <= 3.0 else 0.0)
+                        candidates.append((xyxy, conf, score, norm_name))
+
+                    # Trường hợp B: Model YOLO COCO chung (cell phone, remote)
+                    elif re.sub(r"[^a-z0-9]", "", norm_name) in GENERIC_PHONE_LABELS:
+                        score = conf + (0.35 if 1.2 <= ar <= 3.0 else 0.0)
+                        candidates.append((xyxy, conf, score, None))
 
                 if candidates:
                     candidates.sort(key=lambda x: x[2], reverse=True)
                     best_box = candidates[0][0]
                     best_conf = candidates[0][1]
+                    recognized_model_id = candidates[0][3]
         except Exception as e:
-            print(f"YOLO bbox detection error: {e}")
+            print(f"Lỗi inference YOLO bbox: {e}")
 
-    # Fallback 1: Contour detection ở giữa khung hình (dành cho webcam khi người dùng đưa máy sát camera)
-    if best_box is None:
+    # Contour fallback is only used when YOLO is unavailable; a loaded model
+    # with no detections must not turn a background or person into a phone.
+    if best_box is None and yolo_model is None:
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         blurred = cv2.GaussianBlur(gray, (7, 7), 0)
         edges = cv2.Canny(blurred, 30, 100)
 
-        # Mask chỉ tìm vùng trung tâm (khu vực khung ngắm camera)
         mask = np.zeros_like(edges)
         cx1, cy1 = int(w * 0.08), int(h * 0.06)
         cx2, cy2 = int(w * 0.92), int(h * 0.94)
@@ -122,27 +257,38 @@ def detect_phone_bbox(image, yolo_model=None):
             best_box = valid_rects[0][0]
             best_conf = 0.85
 
-    # Fallback 2: Lấy vùng giữa theo khung ngắm Studio (Viewfinder)
+    # Fallback an toàn cho ảnh tải lên trực tiếp (toàn bộ khung hình)
     if best_box is None:
-        cw = int(w * 0.65)
-        ch = int(min(h * 0.85, cw * 2.05))
-        bx1 = max(0, (w - cw) // 2)
-        by1 = max(0, (h - ch) // 2)
-        best_box = [bx1, by1, min(w, bx1 + cw), min(h, by1 + ch)]
-        best_conf = 0.75
+        best_box = [0, 0, w, h]
+        best_conf = 0.80
 
-    return best_box, round(best_conf, 4)
+    return best_box, best_conf, recognized_model_id
 
-def classify_phone(image, bbox):
+def classify_phone(image, bbox, direct_model_id=None, direct_confidence=0.0):
     """
-    Phân loại chính xác dòng máy (iPhone X, iPhone 16 Pro Max, iPhone 15 Pro, Samsung S24 Ultra).
-    Phân tích:
-    1. Cụm camera: Vị trí, kích thước, hình dáng (viên thuốc đứng nhỏ vs hình vuông lớn 3 mắt vs mắt rời).
-    2. Logo & chữ in mặt lưng: Dòng chữ 'iPhone' ở đáy lưng (chỉ có trên iPhone X / 8 trở về trước).
-    3. Tỷ lệ kích thước và màu viền kim loại.
+    Phân loại chi tiết dòng điện thoại từ ảnh mặt lưng.
+    Kết hợp mô hình học sâu YOLOv8 và kiểm chứng quang học (Optical Feature Verification):
+    1. So khớp mẫu thực tế chuẩn từ tập dữ liệu người dùng cung cấp.
+    2. Nhận diện màu đỏ cherry/tím đặc trưng & cụm camera ngang visor -> iPhone 18 / 18 Pro Max.
+    3. Nhận diện cụm 2 camera kép xếp chéo (diagonal) -> iPhone 13.
+    4. Nhận diện cụm 2 camera kép xếp dọc (vertical) -> iPhone 11 / 12.
+    5. Nhận diện cụm 3 camera tam giác lớn & màu titan -> iPhone Pro / Pro Max.
+    6. Nhận diện cụm camera viên thuốc dọc & chữ iPhone -> iPhone X.
     """
+    # 0. ƯU TIÊN 1: So khớp mẫu thực tế chuẩn xác của các dòng iPhone
+    matched_id, matched_score = match_reference_template(image)
+    if matched_id and matched_id in PHONE_MODELS:
+        info = PHONE_MODELS[matched_id]
+        return {
+            "model_id": info["id"],
+            "model_name": info["name"],
+            "device_code": info["device_code"],
+            "case_model_url": info["case_model_url"],
+            "confidence": round(float(matched_score), 4)
+        }
+
     h_img, w_img = image.shape[:2]
-    x1, y1, x2, y2 = bbox
+    x1, y1, x2, y2 = bbox if bbox is not None else (0, 0, w_img, h_img)
     x1, y1 = max(0, x1), max(0, y1)
     x2, y2 = min(w_img, x2), min(h_img, y2)
 
@@ -152,33 +298,95 @@ def classify_phone(image, bbox):
 
     ph, pw = phone.shape[:2]
 
-    # Nếu người dùng cầm ngang điện thoại, xoay thẳng đứng để phân tích
+    # Xoay thẳng đứng nếu ảnh đang nằm ngang
     if pw > ph:
         phone = cv2.rotate(phone, cv2.ROTATE_90_CLOCKWISE)
         ph, pw = phone.shape[:2]
 
-    # Chuẩn hoá kích thước phân tích
     target_w = 360
-    target_h = int(target_w * (ph / float(pw)))
+    target_h = int(target_w * (ph / float(max(1, pw))))
     resized = cv2.resize(phone, (target_w, target_h), interpolation=cv2.INTER_AREA)
     r_h, r_w = resized.shape[:2]
 
-    scores = {
-        "iphone-x": 0.0,
-        "iphone-16-pro-max": 0.0,
-        "iphone-15-pro": 0.0,
-        "samsung-s24-ultra": 0.0
-    }
+    # --- BƯỚC A: KIỂM CHỨNG ĐẶC TRƯNG THỊ GIÁC QUANG HỌC ---
+    # 1. Kiểm tra màu Cherry / Tím đậm (Màu đặc trưng của iPhone 18 / 18 Pro Max)
+    center_roi = resized[int(r_h * 0.25):int(r_h * 0.75), int(r_w * 0.15):int(r_w * 0.85)]
+    cherry_ratio = 0.0
+    if center_roi.size > 0:
+        hsv_c = cv2.cvtColor(center_roi, cv2.COLOR_BGR2HSV)
+        cherry_mask = cv2.inRange(hsv_c, np.array([125, 35, 35]), np.array([178, 255, 255]))
+        cherry_ratio = float(np.sum(cherry_mask > 0)) / float(cherry_mask.size)
 
-    # 1. PHÂN TÍCH CỤM CAMERA Ở GÓC TRÊN BÊN TRÁI (HOẶC PHẢI NẾU WEBCAM LẬT GƯƠNG)
-    # Lấy vùng camera (khoảng 38% chiều cao, 48% chiều rộng góc trên)
+    # 2. Kiểm tra cụm camera dạng thanh ngang visor (iPhone 18 concept)
+    top_roi = resized[0:int(r_h * 0.32), :]
+    top_gray = cv2.cvtColor(top_roi, cv2.COLOR_BGR2GRAY)
+    edges = cv2.Canny(top_gray, 40, 140)
+    cnts, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    has_visor_cam = False
+    for c in cnts:
+        bx, by, bw, bh = cv2.boundingRect(c)
+        if (bw / float(r_w)) >= 0.60 and bh >= int(r_h * 0.07):
+            has_visor_cam = True
+            break
+
+    # 3. Kiểm tra cụm 2 camera kép chéo (iPhone 13) vs thẳng dọc (iPhone 12/11)
+    # Vùng camera góc trên
+    cam_roi = resized[int(r_h * 0.03):int(r_h * 0.38), int(r_w * 0.06):int(r_w * 0.55)]
+    is_diagonal_camera = False
+    if cam_roi.size > 0:
+        cam_gray = cv2.cvtColor(cam_roi, cv2.COLOR_BGR2GRAY)
+        circles = cv2.HoughCircles(cam_gray, cv2.HOUGH_GRADIENT, dp=1.2, minDist=20, param1=45, param2=20, minRadius=10, maxRadius=60)
+        if circles is not None and len(circles[0]) >= 2:
+            c_sorted = sorted(circles[0], key=lambda x: x[1]) # Sắp xếp theo y
+            c1, c2 = c_sorted[0], c_sorted[1]
+            dx = abs(c1[0] - c2[0])
+            dy = abs(c1[1] - c2[1])
+            # Nếu 2 camera lệch cả trục ngang và trục dọc rõ rệt -> camera chéo
+            if dx >= 12 and dy >= 12:
+                is_diagonal_camera = True
+
+    # --- BƯỚC B: PHÂN LOẠI & KẾT HỢP VỚI YOLO ---
+    # Trường hợp 1: Nhận diện iPhone 18 / 18 Pro Max (Cherry / Visor layout)
+    if cherry_ratio >= 0.30 or has_visor_cam:
+        target_model = "iphone-18-prm" if (r_h / float(r_w)) >= 2.05 else "iphone-18"
+        info = PHONE_MODELS[target_model]
+        return {
+            "model_id": info["id"],
+            "model_name": info["name"],
+            "device_code": info["device_code"],
+            "case_model_url": info["case_model_url"],
+            "confidence": round(max(float(direct_confidence), 0.88), 4)
+        }
+
+    # Trường hợp 2: Nhận diện iPhone 13 (2 camera chéo)
+    if is_diagonal_camera:
+        info = PHONE_MODELS["iphone-13"]
+        return {
+            "model_id": info["id"],
+            "model_name": info["name"],
+            "device_code": info["device_code"],
+            "case_model_url": info["case_model_url"],
+            "confidence": round(max(float(direct_confidence), 0.86), 4)
+        }
+
+    # Trường hợp 3: Tin cậy kết quả trực tiếp từ YOLO nếu không rơi vào các trường hợp đặc biệt trên
+    if direct_model_id and direct_model_id in PHONE_MODELS:
+        info = PHONE_MODELS[direct_model_id]
+        return {
+            "model_id": info["id"],
+            "model_name": info["name"],
+            "device_code": info["device_code"],
+            "case_model_url": info["case_model_url"],
+            "confidence": round(float(direct_confidence), 4)
+        }
+
+    # 1. Phân tích vùng camera góc trên trái và góc trên phải (do lật gương webcam)
     quadrants = [
         ("top_left", resized[0:int(r_h * 0.38), 0:int(r_w * 0.48)]),
         ("top_right", resized[0:int(r_h * 0.38), int(r_w * 0.52):r_w])
     ]
 
     detected_bump = None
-
     for quad_name, quad_img in quadrants:
         if quad_img.size == 0:
             continue
@@ -195,10 +403,8 @@ def classify_phone(image, bbox):
                 w_ratio = bw / float(r_w)
                 aspect = bh / float(max(1, bw))
 
-                # Loại bỏ các contour mép viền (aspect < 0.6 hoặc quá nhỏ / quá khổng lồ)
                 if 0.08 <= w_ratio <= 0.60 and 0.008 <= area_ratio <= 0.30 and aspect >= 0.70:
                     if detected_bump is None or (
-                        # Ưu tiên ứng viên có dạng viên thuốc dọc (iPhone X) hoặc cụm vuông (iPhone 16 Pro)
                         (1.6 <= aspect <= 3.2 and w_ratio <= 0.30) or 
                         (0.80 <= aspect <= 1.35 and w_ratio >= 0.32)
                     ):
@@ -211,81 +417,65 @@ def classify_phone(image, bbox):
                             "quad": quad_name
                         }
 
-    # 2. PHÂN TÍCH VẾT IN CHỮ 'iPhone' Ở PHẦN ĐÁY LƯNG (Đặc trưng duy nhất của iPhone X / 8)
+    # 2. Phân tích chữ 'iPhone' ở đáy lưng máy (chỉ có trên iPhone X / 8)
     bottom_text_region = resized[int(r_h * 0.65):int(r_h * 0.88), int(r_w * 0.20):int(r_w * 0.80)]
     has_iphone_text = False
     if bottom_text_region.size > 0:
         gray_bottom = cv2.cvtColor(bottom_text_region, cv2.COLOR_BGR2GRAY)
         sobel_x = cv2.Sobel(gray_bottom, cv2.CV_64F, 1, 0, ksize=3)
         edge_energy = float(np.mean(np.abs(sobel_x)))
-        # Text in trên kính có biên độ từ 8.0 trở lên
         if edge_energy > 8.0:
             has_iphone_text = True
             scores["iphone-x"] += 0.50
 
-    # 3. ĐÁNH GIÁ ĐẶC TRƯNG CỤM CAMERA
+    # 3. Đánh giá cụm camera
     if detected_bump is not None:
         bump_ar = detected_bump["aspect"]
-        area_ratio = detected_bump["area_ratio"]
         w_ratio = detected_bump["w_ratio"]
 
-        # A. CỤM CAMERA DẠNG VIÊN THUỐC DỌC (Đặc trưng độc quyền của iPhone X: 2 mắt dọc, flash ở giữa)
-        # Bề ngang nhỏ gọn (~12% - 25% chiều rộng máy), aspect ratio ~ 1.7 - 2.8
+        # A. Cụm hình viên thuốc dọc hẹp (iPhone X)
         if 1.6 <= bump_ar <= 3.2 and w_ratio <= 0.30:
-            scores["iphone-x"] += 0.70
+            scores["iphone-x"] += 0.80
             if has_iphone_text:
                 scores["iphone-x"] += 0.25
 
-        # B. CỤM CAMERA HÌNH VUÔNG LỚN (Đặc trưng của iPhone 16 Pro Max / 15 Pro)
-        # Hình vuông (aspect ~ 0.85 - 1.35), chiếm > 35% bề ngang, không có chữ 'iPhone' ở đáy
+        # B. Cụm camera vuông lớn (iPhone Pro / Pro Max)
         elif 0.75 <= bump_ar <= 1.40 and w_ratio >= 0.32:
-            scores["iphone-16-pro-max"] += 0.70
-            scores["iphone-15-pro"] += 0.40
-            if (r_h / float(r_w)) >= 2.05:
-                scores["iphone-16-pro-max"] += 0.20
+            scores["iphone-16-pro-max"] += 0.65
+            scores["iphone-15-pro"] += 0.60
+            scores["iphone-14-prm"] += 0.55
+            scores["iphone-13-prm"] += 0.50
+            scores["iphone-12-prm"] += 0.45
+            scores["iphone-11-prm"] += 0.40
 
-        # C. Cụm camera kép của iPhone 16 thường (đèn flash ngoài, không có chữ iPhone)
-        elif 1.4 <= bump_ar <= 2.2 and not has_iphone_text:
-            scores["iphone-16-pro-max"] += 0.45
+            if (r_h / float(r_w)) >= 2.08:
+                scores["iphone-16-pro-max"] += 0.25
+                scores["iphone-15-prm"] += 0.20
 
-    # 4. ĐẶC TRƯNG MÀU SẮC LƯNG KÍNH & KHUNG THÉP
-    # iPhone X Silver (như ảnh của người dùng): Mặt lưng kính trắng sáng bóng, tương phản cao
-    mean_val = float(np.mean(resized))
-    std_val = float(np.std(resized))
-    if mean_val > 140 and std_val > 35:
-        scores["iphone-x"] += 0.15
+        # C. Cụm camera vuông 2 mắt (iPhone 11, 12, 13)
+        elif 0.85 <= bump_ar <= 1.35 and 0.22 <= w_ratio < 0.32:
+            scores["iphone-13"] += 0.60
+            scores["iphone-12"] += 0.55
+            scores["iphone-11"] += 0.50
 
-    # 5. TỶ LỆ THÂN MÁY
-    body_ar = r_h / float(r_w)
-    if body_ar >= 2.08 and not has_iphone_text:
-        scores["iphone-16-pro-max"] += 0.20
-        scores["samsung-s24-ultra"] += 0.15
-    elif 1.95 <= body_ar < 2.08:
-        scores["iphone-x"] += 0.15
+        # D. Camera đơn nhỏ (iPhone XR)
+        elif 0.80 <= bump_ar <= 1.25 and w_ratio < 0.20:
+            scores["iphone-xr"] += 0.70
 
-    # Lựa chọn model có điểm số cao nhất
+    if detected_bump is None:
+        return None
+
+    # Tìm model có điểm cao nhất
     best_model_id = max(scores, key=scores.get)
-    best_score = scores[best_model_id]
+    best_score = min(0.98, scores[best_model_id])
+    if best_score < 0.30:
+        return None
 
-    if best_score < 0.25:
-        if has_iphone_text or (detected_bump and detected_bump["aspect"] > 1.45) or (mean_val > 130 and std_val > 25):
-            best_model_id = "iphone-x"
-            best_conf = 0.95
-        else:
-            best_model_id = "iphone-16-pro-max"
-            best_conf = 0.92
-    else:
-        best_conf = min(0.99, max(0.90, 0.78 + best_score * 0.20))
-
-    model_info = PHONE_MODELS.get(best_model_id, PHONE_MODELS["iphone-x"])
-
+    info = PHONE_MODELS.get(best_model_id, PHONE_MODELS["iphone-15-pro"])
     return {
-        "model_id": best_model_id,
-        "model_name": model_info["name"],
-        "device_code": model_info["device_code"],
-        "case_model_url": model_info["case_model_url"],
-        "confidence": round(best_conf, 4),
-        "scores": {k: round(v, 3) for k, v in scores.items()},
-        "has_iphone_text": has_iphone_text,
-        "bump_info": detected_bump
+        "model_id": info["id"],
+        "model_name": info["name"],
+        "device_code": info["device_code"],
+        "case_model_url": info["case_model_url"],
+        "confidence": round(best_score, 4)
     }

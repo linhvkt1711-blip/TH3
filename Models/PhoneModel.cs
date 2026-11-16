@@ -64,7 +64,7 @@ namespace TH3.Models
                 DeviceCode = "IP11PM",
                 Brand = "Apple",
                 Model3DPath = "/models/phones/iphone-11-prm.glb",
-                AvailableColorsJson = "[{\"name\":\"Xanh Midnight Green\",\"hex\":\"#4e5851\"},{\"name\":\"Xám Space Gray\",\"hex\":\"#4c4a46\"},{\"name\":\"Bạc Silver\",\"hex\":\"#ebebe3\"},{\"name\":\"Vàng Gold\",\"hex\":\"#fad7bd\"}]"
+                AvailableColorsJson = "[{\"name\":\"Đen\",\"hex\":\"#1f2020\"},{\"name\":\"Xám Space Gray\",\"hex\":\"#4c4a46\"},{\"name\":\"Bạc Silver\",\"hex\":\"#ebebe3\"},{\"name\":\"Vàng Gold\",\"hex\":\"#fad7bd\"}]"
             },
             new PhoneModel
             {
@@ -79,6 +79,16 @@ namespace TH3.Models
             new PhoneModel
             {
                 Id = 6,
+                Name = "iPhone 12 Pro Max",
+                Slug = "iphone-12-prm",
+                DeviceCode = "IP12PM",
+                Brand = "Apple",
+                Model3DPath = "/models/phones/iphone-12-prm.glb",
+                AvailableColorsJson = "[{\"name\":\"Xanh Navy\",\"hex\":\"#273444\"},{\"name\":\"Trắng\",\"hex\":\"#f9f6ef\"},{\"name\":\"Đen\",\"hex\":\"#1f2020\"},{\"name\":\"Xanh Lá\",\"hex\":\"#daf0db\"},{\"name\":\"Tím\",\"hex\":\"#b9b2db\"}]"
+            },
+            new PhoneModel
+            {
+                Id = 7,
                 Name = "iPhone 13",
                 Slug = "iphone-13",
                 DeviceCode = "IP13",
@@ -88,7 +98,7 @@ namespace TH3.Models
             },
             new PhoneModel
             {
-                Id = 7,
+                Id = 8,
                 Name = "iPhone 13 Pro Max",
                 Slug = "iphone-13-prm",
                 DeviceCode = "IP13PM",
@@ -98,7 +108,7 @@ namespace TH3.Models
             },
             new PhoneModel
             {
-                Id = 8,
+                Id = 9,
                 Name = "iPhone 14 Pro Max",
                 Slug = "iphone-14-prm",
                 DeviceCode = "IP14PM",
@@ -108,7 +118,7 @@ namespace TH3.Models
             },
             new PhoneModel
             {
-                Id = 9,
+                Id = 10,
                 Name = "iPhone 15 Pro",
                 Slug = "iphone-15-pro",
                 DeviceCode = "IP01",
@@ -118,7 +128,7 @@ namespace TH3.Models
             },
             new PhoneModel
             {
-                Id = 10,
+                Id = 11,
                 Name = "iPhone 16 Pro Max",
                 Slug = "iphone-16-pro-max",
                 DeviceCode = "IP05",
@@ -128,7 +138,27 @@ namespace TH3.Models
             },
             new PhoneModel
             {
-                Id = 11,
+                Id = 12,
+                Name = "iPhone 18",
+                Slug = "iphone-18",
+                DeviceCode = "IP18",
+                Brand = "Apple",
+                Model3DPath = "/models/phones/iphone-18.glb",
+                AvailableColorsJson = "[{\"name\":\"Titan Đen\",\"hex\":\"#3c3b3e\"},{\"name\":\"Titan Tự Nhiên\",\"hex\":\"#d0c4b4\"},{\"name\":\"Titan Trắng\",\"hex\":\"#e2e4e1\"},{\"name\":\"Đỏ cherry\",\"hex\":\"#62100aff\"}]"
+            },
+            new PhoneModel
+            {
+                Id = 13,
+                Name = "iPhone 18 Pro Max",
+                Slug = "iphone-18-prm",
+                DeviceCode = "IP18PM",
+                Brand = "Apple",
+                Model3DPath = "/models/phones/iphone-18-prm.glb",
+                AvailableColorsJson = "[{\"name\":\"Đỏ cherry\",\"hex\":\"#62100aff\"},{\"name\":\"Titan Tự Nhiên\",\"hex\":\"#d0c4b4\"},{\"name\":\"Titan Trắng\",\"hex\":\"#e2e4e1\"},{\"name\":\"Titan Đen\",\"hex\":\"#3c3b3e\"}]"
+            },
+            new PhoneModel
+            {
+                Id = 14,
                 Name = "Samsung Galaxy S24 Ultra",
                 Slug = "samsung-s24-ultra",
                 DeviceCode = "SS01",
