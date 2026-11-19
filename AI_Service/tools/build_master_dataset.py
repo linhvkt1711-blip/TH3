@@ -26,16 +26,12 @@ CLASSES = [
     "iphone-14-prm",
     "iphone-15-pro",
     "iphone-16-pro-max",
-    "iphone-18",
     "iphone-18-prm",
-    "samsung-s24-ultra",
-    "iphone-15-prm"
 ]
 
 CLASS_TO_ID = {cls: idx for idx, cls in enumerate(CLASSES)}
 
 USER_GOLDEN_MAPPING = {
-    "media_1794830440225_b91968f0.png": "iphone-18",
     "media_1794830446764_8bd4adcb.png": "iphone-18-prm",
     "media_1794830453769_f695f926.jpg": "iphone-13",
     "media_1794861063980_86edbe66.png": "iphone-18-prm",

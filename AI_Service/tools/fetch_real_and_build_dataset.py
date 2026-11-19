@@ -19,10 +19,7 @@ CLASSES = [
     "iphone-14-prm",
     "iphone-15-pro",
     "iphone-16-pro-max",
-    "iphone-18",
-    "iphone-18-prm",
-    "samsung-s24-ultra",
-    "iphone-15-prm"
+    "iphone-18-prm"
 ]
 
 CLASS_TO_ID = {cls: idx for idx, cls in enumerate(CLASSES)}
@@ -38,9 +35,7 @@ CRAWL_KEYWORDS = {
     "iphone-13-prm": ["iPhone 13 Pro Max 后盖", "iPhone 13 Pro Max camera back"],
     "iphone-14-prm": ["iPhone 14 Pro Max 后盖", "iPhone 14 Pro Max back"],
     "iphone-15-pro": ["iPhone 15 Pro 后盖", "iPhone 15 Pro natural titanium back"],
-    "iphone-15-prm": ["iPhone 15 Pro Max 后盖", "iPhone 15 Pro Max titanium back"],
     "iphone-16-pro-max": ["iPhone 16 Pro Max 后盖", "iPhone 16 Pro Max desert titanium back"],
-    "samsung-s24-ultra": ["Galaxy S24 Ultra 后盖", "Samsung S24 Ultra back view"]
 }
 
 def crawl_real_images(raw_dir, max_per_query=12):

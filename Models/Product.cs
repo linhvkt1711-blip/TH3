@@ -40,7 +40,7 @@ namespace TH3.Models
             set => _productCode = value;
         }
 
-        // Mã thiết bị tương thích: IP01, IP02, SS01... (được lưu trong SQL Server)
+        // Mã thiết bị tương thích lấy từ danh mục PhoneModel.
         [StringLength(20)]
         public string? CompatibleDeviceCode { get; set; }
 

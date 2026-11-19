@@ -57,13 +57,24 @@ yolo_model = None
 YOLO_ERROR = None
 try:
     from ultralytics import YOLO  # type: ignore
-    weights_path = os.path.join(os.path.dirname(__file__), "weights", "yolo_phone_detect.pt")
-    if os.path.exists(weights_path):
+    configured_weights = os.environ.get("PHONE_YOLO_WEIGHTS")
+    if configured_weights:
+        weights_path = (
+            configured_weights
+            if os.path.isabs(configured_weights)
+            else os.path.join(current_dir, configured_weights)
+        )
+        if not os.path.isfile(weights_path):
+            raise FileNotFoundError(f"YOLO weights not found: {weights_path}")
         yolo_model = YOLO(weights_path)
-    elif os.path.exists(os.path.join(os.path.dirname(__file__), "weights", "yolov8n.pt")):
-        yolo_model = YOLO(os.path.join(os.path.dirname(__file__), "weights", "yolov8n.pt"))
     else:
-        yolo_model = YOLO("yolov8n.pt")
+        weights_path = os.path.join(current_dir, "weights", "yolo_phone_detect.pt")
+        if os.path.exists(weights_path):
+            yolo_model = YOLO(weights_path)
+        elif os.path.exists(os.path.join(current_dir, "weights", "yolov8n.pt")):
+            yolo_model = YOLO(os.path.join(current_dir, "weights", "yolov8n.pt"))
+        else:
+            yolo_model = YOLO("yolov8n.pt")
 except Exception as error:
     YOLO_ERROR = str(error)
     print(f"Không tải được model YOLO: {YOLO_ERROR}", file=sys.stderr)
@@ -79,11 +90,9 @@ PHONE_NAMES = {
     "iphone-13-prm": "iPhone 13 Pro Max",
     "iphone-14-prm": "iPhone 14 Pro Max",
     "iphone-15-pro": "iPhone 15 Pro",
-    "iphone-15-prm": "iPhone 15 Pro Max",
     "iphone-16-pro-max": "iPhone 16 Pro Max",
-    "iphone-18": "iPhone 18",
-    "iphone-18-prm": "iPhone 18 Pro Max",
-    "samsung-s24-ultra": "Samsung Galaxy S24 Ultra"
+    "iphone-17-prm": "iPhone 17 Pro Max",
+    "iphone-18-prm": "iPhone 18 Pro Max"
 }
 
 PHONE_DEVICE_CODES = {
@@ -97,11 +106,9 @@ PHONE_DEVICE_CODES = {
     "iphone-13-prm": "IP13PM",
     "iphone-14-prm": "IP14PM",
     "iphone-15-pro": "IP01",
-    "iphone-15-prm": "IP02",
     "iphone-16-pro-max": "IP05",
-    "iphone-18": "IP18",
+    "iphone-17-prm": "IP17PM",
     "iphone-18-prm": "IP18PM",
-    "samsung-s24-ultra": "SS01"
 }
 
 if app is not None:

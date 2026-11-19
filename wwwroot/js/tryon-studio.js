@@ -189,25 +189,24 @@ export class TryOnStudio {
             'iphone-13-prm': [0.0781, 0.1608, 0.00765],
             'iphone-14-prm': [0.0776, 0.1607, 0.00785],
             'iphone-15-pro': [0.0706, 0.1466, 0.00825],
-            'iphone-15-prm': [0.0767, 0.1599, 0.00825],
             'iphone-16-pro-max': [0.0776, 0.1630, 0.00825],
-            'iphone-18': [0.0716, 0.1476, 0.0078],
-            'iphone-18-prm': [0.0776, 0.1630, 0.00825],
-            'samsung-s24-ultra': [0.0790, 0.1623, 0.00860]
+            'iphone-17-prm': [0.0780, 0.1634, 0.00875],
+            'iphone-18-prm': [0.0776, 0.1630, 0.00825]
         };
 
         const modelPaths = {
             'iphone-x': '/models/phones/iphone-x/iphone_x.glb',
+            'iphone-xr': '/models/phones/iphone-xr.glb',
             'iphone-11': '/models/phones/iphone-11.glb',
             'iphone-11-prm': '/models/phones/iphone-11-prm.glb',
             'iphone-12': '/models/phones/iphone-12.glb',
             'iphone-12-prm': '/models/phones/iphone-12-prm.glb',
+            'iphone-13': '/models/phones/iphone-13.glb',
             'iphone-13-prm': '/models/phones/iphone-13-prm.glb',
             'iphone-14-prm': '/models/phones/iphone-14-prm.glb',
             'iphone-15-pro': '/models/phones/iphone-15-pro.glb',
-            'iphone-15-prm': '/models/phones/iphone-15-prm.glb',
             'iphone-16-pro-max': '/models/phones/iphone-16-pro-max-no-sim-desert-titanium.glb',
-            'iphone-18': '/models/phones/iphone-18.glb',
+            'iphone-17-prm': '/models/phones/iphone-17-prm.glb',
             'iphone-18-prm': '/models/phones/iphone-18-prm.glb'
         };
 
@@ -234,12 +233,15 @@ export class TryOnStudio {
 
             if (isIPhoneXModel) {
                 gltf.scene.rotation.y = Math.PI;
+            } else if (phoneSlug === 'iphone-15-pro') {
+                gltf.scene.rotation.y = 0;
             } else if (
-                phoneSlug === 'iphone-11'
+                phoneSlug === 'iphone-xr'
+                || phoneSlug === 'iphone-11'
+                || phoneSlug === 'iphone-13'
                 || phoneSlug === 'iphone-11-prm'
                 || phoneSlug === 'iphone-13-prm'
                 || phoneSlug === 'iphone-14-prm'
-                || phoneSlug === 'iphone-18'
             ) {
                 gltf.scene.rotation.y = 0;
             } else if (
@@ -370,14 +372,6 @@ export class TryOnStudio {
                     height: 0.0330,
                     radius: 0.0075
                 };
-            } else if (phoneSlug === 'iphone-18') {
-                this.cameraPlateauInfo = {
-                    x: -dimensions[0] * 0.178,
-                    y: dimensions[1] * 0.352,
-                    width: dimensions[0] * 0.45,
-                    height: dimensions[1] * 0.21,
-                    radius: 0.0070
-                };
             } else if (phoneSlug === 'iphone-18-prm') {
                 this.cameraPlateauInfo = {
                     x: -dimensions[0] * 0.02,
@@ -385,15 +379,6 @@ export class TryOnStudio {
                     width: dimensions[0] * 0.80,
                     height: dimensions[1] * 0.23,
                     radius: 0.0090
-                };
-            } else if (phoneSlug === 'samsung-s24-ultra') {
-                // Samsung S24 Ultra: Cụm 4 camera rời thẳng hàng
-                this.cameraPlateauInfo = {
-                    x: -dimensions[0] * 0.280,
-                    y: dimensions[1] * 0.285,
-                    width: 0.0270,
-                    height: 0.0590,
-                    radius: 0.0060
                 };
             } else {
                 // 9 & 10. iPhone 15 Pro, iPhone 16 Pro Max
@@ -481,13 +466,8 @@ export class TryOnStudio {
                 return true;
             }
 
-            if (phoneSlug === 'iphone-15-pro' || phoneSlug === 'iphone-15-prm' || phoneSlug === 'iphone-16-pro-max') {
+            if (phoneSlug === 'iphone-15-pro' || phoneSlug === 'iphone-16-pro-max') {
                 this.createPhotorealisticIPhone15Pro(phoneSlug);
-                return true;
-            }
-
-            if (phoneSlug === 'samsung-s24-ultra') {
-                this.createPhotorealisticSamsungS24();
                 return true;
             }
 
@@ -1681,99 +1661,6 @@ export class TryOnStudio {
         console.log(`Đã tạo mô hình 3D ${phoneSlug}`);
     }
 
-    // ==================================================================================
-    // TẠO MÔ HÌNH SAMSUNG GALAXY S24 ULTRA (CẠNH VUÔNG VẮC, 4 ỐNG KÍNH THẲNG HÀNG)
-    // ==================================================================================
-    createPhotorealisticSamsungS24() {
-        if (this.phoneMesh) {
-            this.phoneGroup.remove(this.phoneMesh);
-            this.phoneMesh = null;
-        }
-
-        this.phoneMeshUsesRotatedAxes = false;
-        this.isIPhoneX = false;
-        this.options.phoneSlug = 'samsung-s24-ultra';
-
-        const group = new THREE.Group();
-        group.name = "Phone_Model_Group_SamsungS24";
-
-        const width = 0.0790;
-        const height = 0.1623;
-        const depth = 0.0086;
-        const radius = 0.0025; // Góc vuông đặc trưng Galaxy Ultra
-
-        this.phoneDimensions = { width, height, depth, radius };
-
-        // Khung Titan vuông vức
-        const frameShape = this.createRoundedRectShape(width, height, radius);
-        const frameGeo = new THREE.ExtrudeGeometry(frameShape, {
-            depth: depth,
-            bevelEnabled: true,
-            bevelSegments: 4,
-            bevelSize: 0.0012,
-            bevelThickness: 0.0012
-        });
-        frameGeo.center();
-
-        this.phoneBodyMaterial = new THREE.MeshPhysicalMaterial({
-            color: 0x72716e,
-            metalness: 0.92,
-            roughness: 0.28,
-            name: "S24_Titanium_Frame"
-        });
-        this.frameMesh = new THREE.Mesh(frameGeo, this.phoneBodyMaterial);
-        group.add(this.frameMesh);
-
-        // Mặt lưng Gorilla Armor nhám chống chói
-        const backGeo = new THREE.PlaneGeometry(width * 0.97, height * 0.97);
-        this.backGlassMaterial = new THREE.MeshPhysicalMaterial({
-            color: 0x7c7a76,
-            roughness: 0.45,
-            metalness: 0.12,
-            clearcoat: 0.4
-        });
-        const backMesh = new THREE.Mesh(backGeo, this.backGlassMaterial);
-        backMesh.position.z = depth / 2 + 0.0020;
-        group.add(backMesh);
-
-        // Cụm 4 camera rời thẳng hàng
-        const bumpW = 0.0270;
-        const bumpH = 0.0590;
-        const bumpX = -width * 0.280;
-        const bumpY = height * 0.285;
-
-        this.cameraPlateauInfo = {
-            x: bumpX,
-            y: bumpY,
-            width: bumpW + 0.0016,
-            height: bumpH + 0.0016,
-            radius: 0.0060
-        };
-
-        const camYList = [
-            bumpY + bumpH * 0.34,
-            bumpY,
-            bumpY - bumpH * 0.34
-        ];
-
-        camYList.forEach(yPos => {
-            const ringGeo = new THREE.CylinderGeometry(0.0068, 0.0068, 0.0015, 32);
-            const ringMat = new THREE.MeshStandardMaterial({ color: 0x5a5855, metalness: 0.95, roughness: 0.15 });
-            const ring = new THREE.Mesh(ringGeo, ringMat);
-            ring.rotation.x = Math.PI / 2;
-            ring.position.set(bumpX - 0.004, yPos, depth / 2 + 0.0030);
-            group.add(ring);
-        });
-
-        group.rotation.set(0, 0, 0);
-        group.position.set(0, 0, 0);
-
-        this.phoneMesh = group;
-        this.phoneGroup.add(this.phoneMesh);
-        this.phoneModelBaseSize = new THREE.Vector3(width, height, depth);
-        this.phoneModelBaseScale = this.phoneMesh.scale.clone();
-        console.log(`Đã tạo mô hình 3D Samsung S24 Ultra`);
-    }
     // Thêm các nút bấm vật lý (Power, Action, Volume) vào thân máy
     addPhysicalButtons(group, w, h, d) {
         const btnMat = this.phoneBodyMaterial;

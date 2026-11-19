@@ -15,10 +15,7 @@ Các lớp (classes):
 8: iphone-14-prm
 9: iphone-15-pro
 10: iphone-16-pro-max
-11: iphone-18
-12: iphone-18-prm
-13: samsung-s24-ultra
-14: iphone-15-prm
+11: iphone-18-prm
 """
 
 import os
@@ -39,10 +36,7 @@ CLASSES = [
     "iphone-14-prm",
     "iphone-15-pro",
     "iphone-16-pro-max",
-    "iphone-18",
     "iphone-18-prm",
-    "samsung-s24-ultra",
-    "iphone-15-prm"
 ]
 
 CLASS_TO_ID = {cls: idx for idx, cls in enumerate(CLASSES)}
@@ -59,11 +53,8 @@ MODEL_COLORS = {
     "iphone-13-prm": [(206, 181, 155), (79, 82, 84), (207, 231, 250), (237, 242, 241)],
     "iphone-14-prm": [(99, 79, 89), (206, 232, 244), (242, 242, 240), (62, 58, 59)],
     "iphone-15-pro": [(180, 196, 208), (66, 53, 45), (62, 59, 60), (225, 228, 226)], # Titan tự nhiên, xanh, đen, trắng
-    "iphone-15-prm": [(180, 196, 208), (66, 53, 45), (62, 59, 60), (225, 228, 226)],
     "iphone-16-pro-max": [(152, 176, 197), (180, 196, 208), (225, 228, 226), (62, 59, 60)], # Titan Sa Mạc, Tự nhiên, Trắng, Đen
-    "iphone-18": [(62, 59, 60), (180, 196, 208), (225, 228, 226), (10, 16, 98)], # Titan Đen, Tự nhiên, Trắng, Đỏ cherry
-    "iphone-18-prm": [(10, 16, 98), (180, 196, 208), (225, 228, 226), (62, 59, 60)], # Đỏ cherry, Tự nhiên, Trắng, Đen
-    "samsung-s24-ultra": [(124, 128, 130), (38, 38, 38), (80, 60, 72), (200, 230, 245)]
+    "iphone-18-prm": [(10, 16, 98), (180, 196, 208), (225, 228, 226), (62, 59, 60)] # Đỏ cherry, Tự nhiên, Trắng, Đen
 }
 
 def create_background(w, h):
@@ -229,23 +220,6 @@ def draw_camera_module(phone_layer, model_name, pw, ph, body_color):
         # Đèn flash góc trên phải
         cv2.circle(phone_layer, (bx + int(bw * 0.70), by + int(bh * 0.28)), int(lens_r * 0.36), (230, 245, 255), -1)
 
-    # 5b. IPHONE 18: Cụm camera kép chéo theo model GLB mới
-    elif model_name == "iphone-18":
-        bw = int(pw * 0.40)
-        bh = int(pw * 0.40)
-        bx = int(pw * 0.08)
-        by = int(ph * 0.05)
-        draw_rounded_rect(phone_layer, (bx, by), (bx + bw, by + bh), bump_color, int(bw * 0.28))
-        lens_r = int(bw * 0.22)
-        for center in [
-            (bx + int(bw * 0.32), by + int(bh * 0.32)),
-            (bx + int(bw * 0.68), by + int(bh * 0.68))
-        ]:
-            cv2.circle(phone_layer, center, lens_r + 2, (190, 190, 195), 2)
-            cv2.circle(phone_layer, center, lens_r, (12, 12, 15), -1)
-            cv2.circle(phone_layer, center, int(lens_r * 0.42), (40, 55, 80), -1)
-        cv2.circle(phone_layer, (bx + int(bw * 0.72), by + int(bh * 0.34)), int(lens_r * 0.34), (230, 245, 255), -1)
-
     # 6. CÁC DÒNG IPHONE PRO / PRO MAX: Cụm 3 mắt tam giác (11 PRM, 12 PRM, 13 PRM, 14 PRM, 15 Pro, 16 Pro Max, 18 PRM)
     elif any(tag in model_name for tag in ["prm", "pro"]):
         # Kích thước cụm camera to dần theo các thế hệ
@@ -284,22 +258,6 @@ def draw_camera_module(phone_layer, model_name, pw, ph, body_color):
             btn_y = int(ph * 0.65)
             cv2.line(phone_layer, (pw - 2, btn_y), (pw - 2, btn_y + int(ph * 0.08)), (190, 175, 150), 2)
 
-    # 7. SAMSUNG S24 ULTRA: Thiết kế vuông góc, các vòng camera rời độc lập thẳng hàng
-    elif model_name == "samsung-s24-ultra":
-        cx = int(pw * 0.16)
-        r_main = int(pw * 0.09)
-        # 3 ống kính lớn xếp thẳng đứng bên trái
-        y_positions = [int(ph * 0.08), int(ph * 0.17), int(ph * 0.26)]
-        for y in y_positions:
-            cv2.circle(phone_layer, (cx, y), r_main + 2, (170, 170, 175), 2)
-            cv2.circle(phone_layer, (cx, y), r_main, (10, 10, 12), -1)
-            cv2.circle(phone_layer, (cx, y), int(r_main * 0.42), (40, 50, 70), -1)
-        # 2 mắt phụ & đèn flash ở cột bên phải
-        cx2 = cx + int(pw * 0.15)
-        cv2.circle(phone_layer, (cx2, int(ph * 0.09)), int(r_main * 0.5), (230, 245, 255), -1) # Flash
-        cv2.circle(phone_layer, (cx2, int(ph * 0.16)), int(r_main * 0.7), (10, 10, 12), -1)
-        cv2.circle(phone_layer, (cx2, int(ph * 0.24)), int(r_main * 0.7), (10, 10, 12), -1)
-
     # Vẽ Logo Apple ở trung tâm lưng máy (Cho tất cả iPhone)
     if "iphone" in model_name:
         logo_y = int(ph * 0.50) if model_name != "iphone-x" else int(ph * 0.44)
@@ -330,7 +288,7 @@ def generate_synthetic_phone_sample(model_name, img_w=640, img_h=640):
     base_color = random.choice(color_palette)
 
     # Thân máy
-    corner_radius = 2 if model_name == "samsung-s24-ultra" else int(pw * 0.12)
+    corner_radius = int(pw * 0.12)
     temp_body = np.zeros((ph, pw, 3), dtype=np.uint8)
     draw_rounded_rect(temp_body, (0, 0), (pw, ph), base_color, corner_radius)
 

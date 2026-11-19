@@ -199,11 +199,9 @@
             <option value="iphone-13-prm">8. iPhone 13 Pro Max</option>
             <option value="iphone-14-prm">9. iPhone 14 Pro Max</option>
             <option value="iphone-15-pro">10. iPhone 15 Pro</option>
-            <option value="iphone-15-prm">11. iPhone 15 Pro Max</option>
-            <option value="iphone-16-pro-max">12. iPhone 16 Pro Max</option>
-            <option value="iphone-18">13. iPhone 18</option>
-            <option value="iphone-18-prm">14. iPhone 18 Pro Max</option>
-            <option value="samsung-s24-ultra">15. Samsung Galaxy S24 Ultra</option>
+            <option value="iphone-16-pro-max">11. iPhone 16 Pro Max</option>
+            <option value="iphone-17-prm">12. iPhone 17 Pro Max</option>
+            <option value="iphone-18-prm">13. iPhone 18 Pro Max</option>
         </select>
         <button type="button" id="btnLoadPhoneModel" class="btn btn-sm btn-warning w-100 mt-2 mb-3">Tải điện thoại vào Studio</button>
         <button type="button" id="btnUploadPhoneImage" class="btn btn-sm btn-outline-warning w-100 mb-2">
@@ -324,11 +322,9 @@
                             <option value="iphone-13-prm">8. iPhone 13 Pro Max</option>
                             <option value="iphone-14-prm">9. iPhone 14 Pro Max</option>
                             <option value="iphone-15-pro">10. iPhone 15 Pro</option>
-                            <option value="iphone-15-prm">11. iPhone 15 Pro Max</option>
-                            <option value="iphone-16-pro-max">12. iPhone 16 Pro Max</option>
-                            <option value="iphone-18">13. iPhone 18</option>
-                            <option value="iphone-18-prm">14. iPhone 18 Pro Max</option>
-                            <option value="samsung-s24-ultra">15. Samsung Galaxy S24 Ultra</option>
+                            <option value="iphone-16-pro-max">11. iPhone 16 Pro Max</option>
+                            <option value="iphone-17-prm">12. iPhone 17 Pro Max</option>
+                            <option value="iphone-18-prm">13. iPhone 18 Pro Max</option>
                         </select>
                         <button type="button" id="btnUseDetectionModel" class="btn btn-warning text-nowrap">Dùng model 3D này</button>
                     </div>
@@ -340,7 +336,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script type="module">
-        import { TryOnStudio } from '/js/tryon-studio.js?v=12';
+        import { TryOnStudio } from '/js/tryon-studio.js?v=19';
 
         // 1. Khởi tạo 3D Studio với đồ họa Photorealistic
         const initialCode = '@(product?.ProductCode ?? "OL01")';
@@ -519,11 +515,9 @@
             'iphone-13-prm': { name: 'iPhone 13 Pro Max', code: 'IP13PM' },
             'iphone-14-prm': { name: 'iPhone 14 Pro Max', code: 'IP14PM' },
             'iphone-15-pro': { name: 'iPhone 15 Pro', code: 'IP01' },
-            'iphone-15-prm': { name: 'iPhone 15 Pro Max', code: 'IP02' },
             'iphone-16-pro-max': { name: 'iPhone 16 Pro Max', code: 'IP05' },
-            'iphone-18': { name: 'iPhone 18', code: 'IP18' },
+            'iphone-17-prm': { name: 'iPhone 17 Pro Max', code: 'IP17PM' },
             'iphone-18-prm': { name: 'iPhone 18 Pro Max', code: 'IP18PM' },
-            'samsung-s24-ultra': { name: 'Samsung Galaxy S24 Ultra', code: 'SS01' }
         };
         const initialPhoneSlug = '@(phone?.Slug ?? "")';
         document.getElementById('modelSourceDetails').hidden = initialPhoneSlug !== 'iphone-x';

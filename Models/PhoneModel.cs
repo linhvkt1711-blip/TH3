@@ -14,7 +14,7 @@ namespace TH3.Models
         public string Slug { get; set; } = string.Empty;
 
         [StringLength(20)]
-        public string DeviceCode { get; set; } = "IP01"; // IP01, IP02, SS01
+        public string DeviceCode { get; set; } = "IP01";
 
         [StringLength(50)]
         public string Brand { get; set; } = string.Empty;
@@ -23,7 +23,7 @@ namespace TH3.Models
 
         public string AvailableColorsJson { get; set; } = "[]";
 
-        // Danh sách 10 dòng iPhone chuẩn phân loại riêng biệt
+        // Danh sách các mẫu điện thoại có mô hình 3D
         public static readonly List<PhoneModel> DefaultPhones = new List<PhoneModel>
         {
             new PhoneModel
@@ -128,7 +128,7 @@ namespace TH3.Models
             },
             new PhoneModel
             {
-                Id = 11,
+                Id = 12,
                 Name = "iPhone 16 Pro Max",
                 Slug = "iphone-16-pro-max",
                 DeviceCode = "IP05",
@@ -138,17 +138,7 @@ namespace TH3.Models
             },
             new PhoneModel
             {
-                Id = 12,
-                Name = "iPhone 18",
-                Slug = "iphone-18",
-                DeviceCode = "IP18",
-                Brand = "Apple",
-                Model3DPath = "/models/phones/iphone-18.glb",
-                AvailableColorsJson = "[{\"name\":\"Titan Đen\",\"hex\":\"#3c3b3e\"},{\"name\":\"Titan Tự Nhiên\",\"hex\":\"#d0c4b4\"},{\"name\":\"Titan Trắng\",\"hex\":\"#e2e4e1\"},{\"name\":\"Đỏ cherry\",\"hex\":\"#62100aff\"}]"
-            },
-            new PhoneModel
-            {
-                Id = 13,
+                Id = 14,
                 Name = "iPhone 18 Pro Max",
                 Slug = "iphone-18-prm",
                 DeviceCode = "IP18PM",
@@ -158,14 +148,14 @@ namespace TH3.Models
             },
             new PhoneModel
             {
-                Id = 14,
-                Name = "Samsung Galaxy S24 Ultra",
-                Slug = "samsung-s24-ultra",
-                DeviceCode = "SS01",
-                Brand = "Samsung",
-                Model3DPath = "/models/phones/samsung-s24-ultra.glb",
-                AvailableColorsJson = "[{\"name\":\"Xám Titan\",\"hex\":\"#82807c\"},{\"name\":\"Đen Titan\",\"hex\":\"#262626\"},{\"name\":\"Tím Titan\",\"hex\":\"#483c50\"},{\"name\":\"Vàng Titan\",\"hex\":\"#f5e6c8\"}]"
-            }
+                Id = 19,
+                Name = "iPhone 17 Pro Max",
+                Slug = "iphone-17-prm",
+                DeviceCode = "IP17PM",
+                Brand = "Apple",
+                Model3DPath = "/models/phones/iphone-17-prm.glb",
+                AvailableColorsJson = "[{\"name\":\"Silver\",\"hex\":\"#d5d5d2\"},{\"name\":\"Deep Blue\",\"hex\":\"#34475d\"},{\"name\":\"Cosmic Orange\",\"hex\":\"#d27648\"}]"
+            },
         };
     }
 }

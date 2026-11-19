@@ -67,23 +67,13 @@ CLASS_MAPPING = {
     "iphone_15_pro": "iphone-15-pro",
     "iphone15pro": "iphone-15-pro",
     "iphone-15-pro": "iphone-15-pro",
-    "iphone_15_pro_max": "iphone-15-prm",
-    "iphone15promax": "iphone-15-prm",
-    "iphone-15-pro-max": "iphone-15-prm",
-    "iphone-15-prm": "iphone-15-prm",
     "iphone_16_pro_max": "iphone-16-pro-max",
     "iphone16promax": "iphone-16-pro-max",
     "iphone-16-pro-max": "iphone-16-pro-max",
-    "iphone_18": "iphone-18",
-    "iphone18": "iphone-18",
-    "iphone-18": "iphone-18",
     "iphone_18_pro_max": "iphone-18-prm",
     "iphone18promax": "iphone-18-prm",
     "iphone-18-pro-max": "iphone-18-prm",
     "iphone-18-prm": "iphone-18-prm",
-    "samsung_s24_ultra": "samsung-s24-ultra",
-    "samsung-s24-ultra": "samsung-s24-ultra",
-    "galaxys24ultra": "samsung-s24-ultra",
     # Generic phone labels
     "cell phone": None,
     "cellphone": None,
@@ -96,7 +86,7 @@ CLASSES = [
     "iphone-x", "iphone-xr", "iphone-11", "iphone-11-prm",
     "iphone-12", "iphone-12-prm", "iphone-13", "iphone-13-prm",
     "iphone-14-prm", "iphone-15-pro", "iphone-16-pro-max",
-    "iphone-18", "iphone-18-prm", "samsung-s24-ultra", "iphone-15-prm"
+    "iphone-18-prm"
 ]
 
 

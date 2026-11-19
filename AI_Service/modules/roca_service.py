@@ -49,11 +49,8 @@ class PhonePoseEstimationPipeline:
                 "iphone-13-prm": np.array([0.0781, 0.1608, 0.00765]),
                 "iphone-14-prm": np.array([0.0776, 0.1607, 0.00785]),
                 "iphone-15-pro": np.array([0.0706, 0.1466, 0.00825]),
-                "iphone-15-prm": np.array([0.0767, 0.1599, 0.00825]),
                 "iphone-16-pro-max": np.array([0.0776, 0.1630, 0.00825]),
-                "iphone-18": np.array([0.0716, 0.1476, 0.0078]),
                 "iphone-18-prm": np.array([0.0776, 0.1630, 0.00825]),
-                "samsung-s24-ultra": np.array([0.0790, 0.1623, 0.00860])
             }
         else:
             self.cad_database = {
@@ -67,11 +64,8 @@ class PhonePoseEstimationPipeline:
                 "iphone-13-prm": [0.0781, 0.1608, 0.00765],
                 "iphone-14-prm": [0.0776, 0.1607, 0.00785],
                 "iphone-15-pro": [0.0706, 0.1466, 0.00825],
-                "iphone-15-prm": [0.0767, 0.1599, 0.00825],
                 "iphone-16-pro-max": [0.0776, 0.1630, 0.00825],
-                "iphone-18": [0.0716, 0.1476, 0.0078],
                 "iphone-18-prm": [0.0776, 0.1630, 0.00825],
-                "samsung-s24-ultra": [0.0790, 0.1623, 0.00860]
             }
 
     def infer(self, cropped_bgr_image, matched_model_id=None):
@@ -79,18 +73,8 @@ class PhonePoseEstimationPipeline:
         Nhận ảnh crop từ Bounding Box của YOLO, ước lượng tư thế 6DoF
         và truy vấn mã dòng máy CAD khớp nhất.
         """
-        h, w = 480, 640
-        if hasattr(cropped_bgr_image, "shape"):
-            h, w = cropped_bgr_image.shape[:2]
-
-        aspect_ratio = h / float(w) if w > 0 else 2.0
-
         if matched_model_id in self.cad_database:
             matched_cad_id = matched_model_id
-        elif aspect_ratio > 2.08:
-            matched_cad_id = "samsung-s24-ultra"
-        elif aspect_ratio > 1.98:
-            matched_cad_id = "iphone-16-pro-max"
         else:
             matched_cad_id = "iphone-16-pro-max"
 

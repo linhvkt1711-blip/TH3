@@ -2,28 +2,17 @@
 
 @{
     ViewData["Title"] = Model.Name;
-    var compatibleDeviceSlug = Model.CompatibleDeviceCode switch
-    {
-        "IPX01" => "iphone-x",
-        "IP05" => "iphone-16-pro-max",
-        "IP02" => "iphone-15-prm",
-        "IP01" => "iphone-15-pro",
-        "SS01" => "samsung-s24-ultra",
-        _ => null
-    };
-    var catalogPhoneSlug = Model.ProductCode switch
-    {
-        "IPX01" => "iphone-x",
-        "IP05" => "iphone-16-pro-max",
-        "IP02" => "iphone-15-prm",
-        "IP01" => "iphone-15-pro",
-        "SS01" => "samsung-s24-ultra",
-        _ => Model.Name.Contains("iPhone X", StringComparison.OrdinalIgnoreCase) ? "iphone-x"
-            : Model.Name.Contains("iPhone 16", StringComparison.OrdinalIgnoreCase) ? "iphone-16-pro-max"
-            : Model.Name.Contains("Samsung", StringComparison.OrdinalIgnoreCase) ? "samsung-s24-ultra"
-            : Model.Name.Contains("Max", StringComparison.OrdinalIgnoreCase) ? "iphone-15-prm"
-            : null
-    };
+    var phoneModels = TH3.Models.PhoneModel.DefaultPhones;
+    var compatibleDeviceSlug = phoneModels
+        .FirstOrDefault(phone => phone.DeviceCode.Equals(Model.CompatibleDeviceCode, StringComparison.OrdinalIgnoreCase))
+        ?.Slug;
+    var catalogPhoneSlug = phoneModels
+        .FirstOrDefault(phone => phone.DeviceCode.Equals(Model.ProductCode, StringComparison.OrdinalIgnoreCase))
+        ?.Slug
+        ?? phoneModels
+            .OrderByDescending(phone => phone.Name.Length)
+            .FirstOrDefault(phone => Model.Name.Contains(phone.Name, StringComparison.OrdinalIgnoreCase))
+            ?.Slug;
 }
 
 <style>
@@ -218,7 +207,7 @@
                             <span>THỬ ỐP LƯNG 3D TRÊN MÁY BẠN</span>
                         </button>
                     }
-                    else if (Model.ProductCode.StartsWith("IP") || Model.ProductCode.StartsWith("SS") || Model.Category?.Name?.Contains("Điện thoại") == true || Model.Name.Contains("iPhone") || Model.Name.Contains("Samsung"))
+                    else if (catalogPhoneSlug != null && (Model.ProductCode.StartsWith("IP") || Model.Category?.Name?.Contains("Điện thoại") == true || Model.Name.Contains("iPhone")))
                     {
                         <a href="/TryOn3D/Studio?deviceSlug=@catalogPhoneSlug&productId=@Model.Id" 
                            class="btn btn-warning w-100 fw-bold py-3 text-dark shadow-sm d-flex align-items-center justify-content-center gap-2 text-decoration-none">

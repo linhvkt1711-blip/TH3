@@ -130,13 +130,6 @@ PHONE_SEARCH_QUERIES = {
         "iPhone 15 Pro mặt sau",
         "iPhone 15 Pro action button back",
     ],
-    "iphone-15-prm": [
-        "iPhone 15 Pro Max back view",
-        "iPhone 15 Pro Max triple camera",
-        "iPhone 15 Pro Max titanium back",
-        "iPhone 15 Pro Max rear panel",
-        "iPhone 15 Pro Max mặt sau",
-    ],
     "iphone-16-pro-max": [
         "iPhone 16 Pro Max back view",
         "iPhone 16 Pro Max camera control button",
@@ -145,27 +138,12 @@ PHONE_SEARCH_QUERIES = {
         "iPhone 16 Pro Max mặt sau",
         "iPhone 16 Pro Max triple camera large back",
     ],
-    "iphone-18": [
-        "iPhone 18 back view",
-        "iPhone 18 rear camera",
-        "iPhone 18 back design 2025",
-        "iPhone 18 dual camera back",
-        "iPhone 18 mặt sau",
-    ],
     "iphone-18-prm": [
         "iPhone 18 Pro Max back view",
         "iPhone 18 Pro Max camera module",
         "iPhone 18 Pro Max rear panel",
         "iPhone 18 Pro Max mặt sau",
         "iPhone 18 Pro Max triple camera back",
-    ],
-    "samsung-s24-ultra": [
-        "Samsung Galaxy S24 Ultra back view",
-        "Samsung S24 Ultra rear camera",
-        "Samsung Galaxy S24 Ultra titanium back",
-        "Samsung S24 Ultra camera module",
-        "Samsung S24 Ultra mặt sau",
-        "Samsung Galaxy S24 Ultra back panel",
     ],
 }
 

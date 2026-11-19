@@ -77,15 +77,6 @@ namespace TH3.Controllers
                     new Product
                     {
                         Id = 3,
-                        ProductCode = "IP18",
-                        Name = "Ốp Lưng iPhone 18 Titan Siêu Mỏng Đỏ Cherry",
-                        Price = 390000,
-                        CompatibleDeviceCode = "IP18",
-                        MaterialType = "Leather"
-                    },
-                    new Product
-                    {
-                        Id = 4,
                         ProductCode = "IP05",
                         Name = "Ốp Lưng iPhone 16 Pro Max Armor Chống Va Đập",
                         Price = 450000,
@@ -245,14 +236,11 @@ namespace TH3.Controllers
             if (phoneCode == "IP05") // iPhone 16 Pro Max
                 return productName.Contains("16 pro max") || productName.Contains("16 prm");
 
-            if (phoneCode == "IP18")
-                return productName.Contains("iphone 18") && !productName.Contains("pro max") && !productName.Contains("prm");
+            if (phoneCode == "IP17PM")
+                return productName.Contains("17 pro max") || productName.Contains("17 prm");
 
             if (phoneCode == "IP18PM")
                 return productName.Contains("18 pro max") || productName.Contains("18 prm");
-
-            if (phoneCode == "SS01") // Samsung S24 Ultra
-                return productName.Contains("s24 ultra") || productName.Contains("s24u");
 
             return false;
         }
@@ -280,14 +268,14 @@ namespace TH3.Controllers
                 return "iphone-13";
             if (codeOrName.Equals("IP14PM", StringComparison.OrdinalIgnoreCase) || codeOrName.Contains("14 Pro Max", StringComparison.OrdinalIgnoreCase))
                 return "iphone-14-prm";
+            if (codeOrName.Equals("IP01", StringComparison.OrdinalIgnoreCase) || codeOrName.Contains("15 Pro", StringComparison.OrdinalIgnoreCase))
+                return "iphone-15-pro";
+            if (codeOrName.Equals("IP17PM", StringComparison.OrdinalIgnoreCase) || codeOrName.Contains("17 Pro Max", StringComparison.OrdinalIgnoreCase))
+                return "iphone-17-prm";
             if (codeOrName.Equals("IP18PM", StringComparison.OrdinalIgnoreCase) || codeOrName.Contains("18 Pro Max", StringComparison.OrdinalIgnoreCase) || codeOrName.Contains("18 PRM", StringComparison.OrdinalIgnoreCase))
                 return "iphone-18-prm";
-            if (codeOrName.Equals("IP18", StringComparison.OrdinalIgnoreCase) || codeOrName.Contains("iPhone 18", StringComparison.OrdinalIgnoreCase))
-                return "iphone-18";
-            if (codeOrName.Equals("IP05", StringComparison.OrdinalIgnoreCase) || codeOrName.Contains("iPhone 16", StringComparison.OrdinalIgnoreCase))
+            if (codeOrName.Equals("IP05", StringComparison.OrdinalIgnoreCase) || codeOrName.Contains("iPhone 16 Pro Max", StringComparison.OrdinalIgnoreCase))
                 return "iphone-16-pro-max";
-            if (codeOrName.Equals("SS01", StringComparison.OrdinalIgnoreCase) || codeOrName.Contains("Samsung", StringComparison.OrdinalIgnoreCase) || codeOrName.Contains("S24", StringComparison.OrdinalIgnoreCase))
-                return "samsung-s24-ultra";
             if (codeOrName.Equals("IP01", StringComparison.OrdinalIgnoreCase) || codeOrName.Contains("iPhone 15 Pro", StringComparison.OrdinalIgnoreCase))
                 return "iphone-15-pro";
 
@@ -348,15 +336,6 @@ namespace TH3.Controllers
                     new Product
                     {
                         Id = 3,
-                        ProductCode = "IP18",
-                        Name = "Ốp Lưng iPhone 18 Titan Đỏ Cherry",
-                        Price = 390000,
-                        CompatibleDeviceCode = "IP18",
-                        MaterialType = "Leather"
-                    },
-                    new Product
-                    {
-                        Id = 4,
                         ProductCode = "IP05",
                         Name = "Ốp Lưng iPhone 16 Pro Max Armor",
                         Price = 450000,
