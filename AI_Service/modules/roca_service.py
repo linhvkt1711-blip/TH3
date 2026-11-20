@@ -40,7 +40,6 @@ class PhonePoseEstimationPipeline:
         if HAS_NUMPY:
             self.cad_database = {
                 "iphone-x": np.array([0.0709, 0.1436, 0.0077]),
-                "iphone-xr": np.array([0.0757, 0.1509, 0.0083]),
                 "iphone-11": np.array([0.0757, 0.1509, 0.0083]),
                 "iphone-11-prm": np.array([0.0778, 0.1580, 0.0081]),
                 "iphone-12": np.array([0.0715, 0.1467, 0.0074]),
@@ -55,7 +54,6 @@ class PhonePoseEstimationPipeline:
         else:
             self.cad_database = {
                 "iphone-x": [0.0709, 0.1436, 0.0077],
-                "iphone-xr": [0.0757, 0.1509, 0.0083],
                 "iphone-11": [0.0757, 0.1509, 0.0083],
                 "iphone-11-prm": [0.0778, 0.1580, 0.0081],
                 "iphone-12": [0.0715, 0.1467, 0.0074],

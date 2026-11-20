@@ -8,6 +8,7 @@ Sau khi huấn luyện thành công, file weights sẽ được tự động lư
 import os
 import shutil
 import argparse
+os.environ["YOLO_CONFIG_DIR"] = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".config")
 from ultralytics import YOLO
 import torch
 

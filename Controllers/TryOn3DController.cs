@@ -206,9 +206,6 @@ namespace TH3.Controllers
             if (phoneCode == "IPX01") // iPhone X / Xs / 10
                 return productName.Contains("iphone x") || productName.Contains("iphone 10") || productName.Contains("ipx");
 
-            if (phoneCode == "IPXR") // iPhone XR
-                return productName.Contains("iphone xr") || productName.Contains("ipxr");
-
             if (phoneCode == "IP11") // iPhone 11 (thường)
                 return productName.Contains("iphone 11") && !productName.Contains("pro") && !productName.Contains("prm");
 
@@ -252,8 +249,6 @@ namespace TH3.Controllers
             var codeOrName = value.Trim();
             if (codeOrName.Equals("IPX01", StringComparison.OrdinalIgnoreCase) || codeOrName.Contains("iPhone X", StringComparison.OrdinalIgnoreCase) || codeOrName.Contains("iPhone 10", StringComparison.OrdinalIgnoreCase))
                 return "iphone-x";
-            if (codeOrName.Equals("IPXR", StringComparison.OrdinalIgnoreCase) || codeOrName.Contains("iPhone XR", StringComparison.OrdinalIgnoreCase))
-                return "iphone-xr";
             if (codeOrName.Equals("IP11PM", StringComparison.OrdinalIgnoreCase) || codeOrName.Contains("11 Pro Max", StringComparison.OrdinalIgnoreCase))
                 return "iphone-11-prm";
             if (codeOrName.Equals("IP11", StringComparison.OrdinalIgnoreCase) || codeOrName.Equals("IP1101", StringComparison.OrdinalIgnoreCase) || codeOrName.Contains("iPhone 11", StringComparison.OrdinalIgnoreCase))

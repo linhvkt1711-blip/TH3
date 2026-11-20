@@ -53,17 +53,6 @@ namespace TH3.Services
                     },
                     new Product
                     {
-                        Name = "Ốp Lưng iPhone XR Liquid Silicone Màu Cam Coral (OL_IPXR)",
-                        Price = 185000,
-                        Description = "Mã: OL_IPXR | Tương thích: iPhone XR (IPXR). Silicone mịn màng khoét camera đơn chuẩn 100%, chống bám bẩn và chống sốc êm ái.",
-                        ImageUrl = "https://images.unsplash.com/photo-1541807084-5c52b6b3adef?w=500",
-                        CaseTexturePath = "https://images.unsplash.com/photo-1541807084-5c52b6b3adef?w=500",
-                        MaterialType = "Silicone",
-                        CompatibleDeviceCode = "IPXR",
-                        CategoryId = caseCategory.Id
-                    },
-                    new Product
-                    {
                         Name = "Ốp Lưng iPhone 11 Trong Suốt Chống Trầy Góc Gia Cố (OL_IP11)",
                         Price = 190000,
                         Description = "Mã: OL_IP11 | Tương thích: iPhone 11 (IP11). Thiết kế khoét cụm 2 camera vuông chuẩn xác, 4 góc đệm khí chống va đập.",

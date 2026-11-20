@@ -1,20 +1,31 @@
 @echo off
+cd /d "%~dp0"
 echo ========================================================
 echo   HUAN LUYEN MODEL YOLO NHAN DIEN CAC DONG IPHONE
 echo ========================================================
 echo.
-echo 1. Huan luyen nhanh (15 epochs - Khuyen nghi cho CPU)
-echo 2. Huan luyen sau (35 epochs - Do chinh xac cao)
-echo 3. Tao lai toan bo bo du lieu Dataset
+
+set "PY=python"
+if exist "..\.venv\Scripts\python.exe" (
+    set "PY=..\.venv\Scripts\python.exe"
+) else if exist ".venv\Scripts\python.exe" (
+    set "PY=.venv\Scripts\python.exe"
+)
+
+echo 1. Huan luyen tu bo anh that nguoi dung vua upload (Khuyen nghi - 10 epochs)
+echo 2. Tao bo du lieu tong hop toan dien va huan luyen
+echo 3. Huan luyen nhanh 5 epochs
 echo.
 set /p choice="Chon che do (1/2/3) [Mac dinh: 1]: "
 
 if "%choice%"=="2" (
-    python train_yolo.py --epochs 35 --batch 8 --imgsz 416
+    echo Dang tao dataset tong hop cac dong iPhone...
+    %PY% tools\generate_dataset.py
+    %PY% train_yolo.py --epochs 15 --batch 8 --imgsz 320
 ) else if "%choice%"=="3" (
-    python tools\generate_dataset.py
+    %PY% tools\train_from_user_zip.py 5
 ) else (
-    python train_yolo.py --epochs 15 --batch 8 --imgsz 416
+    %PY% tools\train_from_user_zip.py 10
 )
 
 echo.

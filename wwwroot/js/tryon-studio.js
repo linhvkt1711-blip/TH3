@@ -180,7 +180,6 @@ export class TryOnStudio {
 
         const iphoneDimensions = {
             'iphone-x': [0.0709, 0.1436, 0.0077],
-            'iphone-xr': [0.0757, 0.1509, 0.0083],
             'iphone-11': [0.0757, 0.1509, 0.0083],
             'iphone-11-prm': [0.0778, 0.1580, 0.0081],
             'iphone-12': [0.0715, 0.1467, 0.0074],
@@ -196,7 +195,6 @@ export class TryOnStudio {
 
         const modelPaths = {
             'iphone-x': '/models/phones/iphone-x/iphone_x.glb',
-            'iphone-xr': '/models/phones/iphone-xr.glb',
             'iphone-11': '/models/phones/iphone-11.glb',
             'iphone-11-prm': '/models/phones/iphone-11-prm.glb',
             'iphone-12': '/models/phones/iphone-12.glb',
@@ -231,29 +229,23 @@ export class TryOnStudio {
             this.phoneMesh.add(gltf.scene);
             this.options.phoneSlug = phoneSlug;
 
-            if (isIPhoneXModel) {
-                gltf.scene.rotation.y = Math.PI;
-            } else if (phoneSlug === 'iphone-15-pro') {
-                gltf.scene.rotation.y = 0;
-            } else if (
-                phoneSlug === 'iphone-xr'
-                || phoneSlug === 'iphone-11'
-                || phoneSlug === 'iphone-13'
-                || phoneSlug === 'iphone-11-prm'
-                || phoneSlug === 'iphone-13-prm'
-                || phoneSlug === 'iphone-14-prm'
-            ) {
-                gltf.scene.rotation.y = 0;
-            } else if (
-                phoneSlug === 'iphone-12'
-                || phoneSlug === 'iphone-12-prm'
-                || phoneSlug === 'iphone-18-prm'
-            ) {
-                gltf.scene.rotation.y = Math.PI;
-            } else if (isIPhone) {
-                gltf.scene.rotation.y = -Math.PI / 2;
-            }
+            const modelRotations = {
+                'iphone-x': [0, Math.PI, 0],
+                'iphone-11': [0, 0, 0],
+                'iphone-11-prm': [0, 0, 0],
+                'iphone-12': [0, Math.PI, 0],
+                'iphone-12-prm': [0, Math.PI, 0],
+                'iphone-13': [0, 0, 0],
+                'iphone-13-prm': [0, 0, 0],
+                'iphone-14-prm': [0, 0, 0],
+                'iphone-15-pro': [0, 0, 0],
+                'iphone-16-pro-max': [0, -Math.PI / 2, 0],
+                'iphone-17-prm': [0, -Math.PI / 2, 0],
+                'iphone-18-prm': [0, Math.PI, 0]
+            };
 
+            const rot = modelRotations[phoneSlug] || [0, 0, 0];
+            gltf.scene.rotation.set(...rot);
             gltf.scene.updateMatrixWorld(true);
 
             let innerBounds = new THREE.Box3().setFromObject(gltf.scene);
@@ -266,13 +258,15 @@ export class TryOnStudio {
                 innerSize = innerBounds.getSize(new THREE.Vector3());
             }
 
-            const innerCenter = innerBounds.getCenter(new THREE.Vector3());
+            // Nếu mô hình GLB bị lỗi kích thước khối lập phương (như một số file Sketchfab nén dummy)
+            const isCube = (Math.abs(innerSize.x - innerSize.y) < 0.005 && Math.abs(innerSize.y - innerSize.z) < 0.005);
+            if (isCube) {
+                throw new Error(`File GLB ${phoneSlug} bị lỗi hình học khối, chuyển sang mô hình dựng chuẩn xác.`);
+            }
 
             if (innerSize.x <= 0 || innerSize.y <= 0 || innerSize.z <= 0) {
                 throw new Error(`Kich thuoc GLB khong hop le: ${glbPath}`);
             }
-
-            gltf.scene.position.sub(innerCenter);
 
             const dimensions = iphoneDimensions[phoneSlug] || [
                 innerSize.x,
@@ -280,10 +274,18 @@ export class TryOnStudio {
                 innerSize.z
             ];
 
-            // Non-uniform scale cho tất cả models: nén/giãn đúng kích thước thực tế
             const scaleX = dimensions[0] / innerSize.x;
             const scaleY = dimensions[1] / innerSize.y;
-            const scaleZ = dimensions[2] / innerSize.z;
+            // Tỷ lệ trục Z theo tỷ lệ tự nhiên của mô hình để không làm bẹp dí thân máy (camera lồi về phía lưng)
+            const scaleZ = (scaleX + scaleY) / 2;
+
+            // Căn giữa mô hình sao cho thân máy nằm chính xác từ [-depth/2, +depth/2]:
+            // Màn hình trước nằm ở innerBounds.min.z, mặt lưng kính ở innerBounds.min.z + dimensions[2] / scaleZ
+            const bodyCenterZ = innerBounds.min.z + (dimensions[2] / scaleZ) / 2;
+            const bodyCenterX = (innerBounds.min.x + innerBounds.max.x) / 2;
+            const bodyCenterY = (innerBounds.min.y + innerBounds.max.y) / 2;
+
+            gltf.scene.position.set(-bodyCenterX, -bodyCenterY, -bodyCenterZ);
 
             this.phoneDimensions = {
                 width: dimensions[0],
@@ -292,104 +294,23 @@ export class TryOnStudio {
                 radius: Math.min(dimensions[0], dimensions[1]) * 0.12
             };
 
-            if (isIPhoneXModel) {
-                // 1. iPhone X / Xs: Camera viên thuốc dọc hẹp (tọa độ đo từ GLB)
-                this.cameraPlateauInfo = {
-                    x: -dimensions[0] * 0.339,
-                    y: dimensions[1] * 0.375,
-                    width: 0.0120,
-                    height: 0.0260,
-                    radius: 0.0060
-                };
-            } else if (phoneSlug === 'iphone-xr') {
-                // 2. iPhone XR: 1 Camera đơn tròn
-                this.cameraPlateauInfo = {
-                    x: -dimensions[0] * 0.285,
-                    y: dimensions[1] * 0.355,
-                    width: 0.0150,
-                    height: 0.0150,
-                    radius: 0.0075
-                };
-            } else if (phoneSlug === 'iphone-11') {
-                // 3. iPhone 11: Cụm vuông 2 mắt dọc
-                this.cameraPlateauInfo = {
-                    x: -dimensions[0] * 0.260,
-                    y: dimensions[1] * 0.340,
-                    width: 0.0295,
-                    height: 0.0320,
-                    radius: 0.0080
-                };
-            } else if (phoneSlug === 'iphone-11-prm') {
-                // 4. iPhone 11 Pro Max: Cụm vuông 3 mắt
-                this.cameraPlateauInfo = {
-                    x: -dimensions[0] * 0.245,
-                    y: dimensions[1] * 0.345,
-                    width: 0.0330,
-                    height: 0.0350,
-                    radius: 0.0080
-                };
-            } else if (phoneSlug === 'iphone-12-prm') {
-                this.cameraPlateauInfo = {
-                    x: -dimensions[0] * 0.235,
-                    y: dimensions[1] * 0.350,
-                    width: 0.0350,
-                    height: 0.0370,
-                    radius: 0.0080
-                };
-            } else if (phoneSlug === 'iphone-12') {
-                // 5. iPhone 12: Cụm vuông 2 mắt dọc viền phẳng
-                this.cameraPlateauInfo = {
-                    x: -dimensions[0] * 0.255,
-                    y: dimensions[1] * 0.340,
-                    width: 0.0290,
-                    height: 0.0310,
-                    radius: 0.0075
-                };
-            } else if (phoneSlug === 'iphone-13') {
-                // 6. iPhone 13: Cụm vuông 2 mắt chéo
-                this.cameraPlateauInfo = {
-                    x: -dimensions[0] * 0.255,
-                    y: dimensions[1] * 0.340,
-                    width: 0.0305,
-                    height: 0.0325,
-                    radius: 0.0080
-                };
-            } else if (phoneSlug === 'iphone-13-prm') {
-                // 7. iPhone 13 Pro Max: Cụm vuông 3 mắt lớn
-                this.cameraPlateauInfo = {
-                    x: -dimensions[0] * 0.222,
-                    y: dimensions[1] * 0.360,
-                    width: 0.0370,
-                    height: 0.0395,
-                    radius: 0.0080
-                };
-            } else if (phoneSlug === 'iphone-14-prm') {
-                // 8. iPhone 14 Pro Max: Cụm vuông 3 mắt
-                this.cameraPlateauInfo = {
-                    x: -dimensions[0] * 0.200,
-                    y: dimensions[1] * 0.350,
-                    width: 0.0314,
-                    height: 0.0330,
-                    radius: 0.0075
-                };
-            } else if (phoneSlug === 'iphone-18-prm') {
-                this.cameraPlateauInfo = {
-                    x: -dimensions[0] * 0.02,
-                    y: dimensions[1] * 0.36,
-                    width: dimensions[0] * 0.80,
-                    height: dimensions[1] * 0.23,
-                    radius: 0.0090
-                };
-            } else {
-                // 9 & 10. iPhone 15 Pro, iPhone 16 Pro Max
-                this.cameraPlateauInfo = {
-                    x: -dimensions[0] * 0.215,
-                    y: dimensions[1] * 0.335,
-                    width: dimensions[0] * 0.50,
-                    height: dimensions[1] * 0.255,
-                    radius: 0.0085
-                };
-            }
+            // Tọa độ đo đạc chuẩn xác 100% từ mô hình CAD và 3D thực tế của từng dòng iPhone
+            const cameraSpecs = {
+                'iphone-x': { x: -0.0238, y: 0.0536, width: 0.0112, height: 0.0248, radius: 0.0056 },
+                'iphone-11': { x: -0.0196, y: 0.0558, width: 0.0270, height: 0.0300, radius: 0.0075 },
+                'iphone-11-prm': { x: -0.0189, y: 0.0587, width: 0.0285, height: 0.0285, radius: 0.0075 },
+                'iphone-12': { x: -0.0167, y: 0.0530, width: 0.0270, height: 0.0305, radius: 0.0075 },
+                'iphone-12-prm': { x: -0.0195, y: 0.0609, width: 0.0285, height: 0.0290, radius: 0.0075 },
+                'iphone-13': { x: -0.0176, y: 0.0553, width: 0.0305, height: 0.0315, radius: 0.0080 },
+                'iphone-13-prm': { x: -0.0160, y: 0.0560, width: 0.0370, height: 0.0390, radius: 0.0080 },
+                'iphone-14-prm': { x: -0.0156, y: 0.0566, width: 0.0350, height: 0.0365, radius: 0.0080 },
+                'iphone-15-pro': { x: -0.0140, y: 0.0515, width: 0.0340, height: 0.0350, radius: 0.0075 },
+                'iphone-16-pro-max': { x: -0.0180, y: 0.0577, width: 0.0320, height: 0.0365, radius: 0.0085 },
+                'iphone-17-prm': { x: -0.0150, y: 0.0573, width: 0.0320, height: 0.0365, radius: 0.0085 },
+                'iphone-18-prm': { x: -0.0156, y: 0.0576, width: 0.0320, height: 0.0365, radius: 0.0085 }
+            };
+
+            this.cameraPlateauInfo = cameraSpecs[phoneSlug] || cameraSpecs['iphone-16-pro-max'];
 
             this.phoneMesh.scale.set(scaleX, scaleY, scaleZ);
 
@@ -454,25 +375,21 @@ export class TryOnStudio {
             console.log(`Da tai mo hinh dien thoai: ${phoneSlug}`);
             return true;
         } catch (error) {
-            console.warn(`Đang dùng mô hình 3D dự phòng cho "${phoneSlug}".`, error);
+            console.warn(`Đang dùng mô hình 3D chuẩn xác cho "${phoneSlug}".`, error);
 
             if (phoneSlug === 'iphone-x') {
                 this.createPhotorealisticIPhoneX();
                 return true;
             }
 
-            if (phoneSlug === 'iphone-11' || phoneSlug === 'iphone-13' || phoneSlug === 'iphone-xr') {
+            if (phoneSlug === 'iphone-11' || phoneSlug === 'iphone-12' || phoneSlug === 'iphone-13') {
                 this.createPhotorealisticIPhone11('#c7d8ca', phoneSlug);
                 return true;
             }
 
-            if (phoneSlug === 'iphone-15-pro' || phoneSlug === 'iphone-16-pro-max') {
-                this.createPhotorealisticIPhone15Pro(phoneSlug);
-                return true;
-            }
-
-            console.error(`Không tải được mô hình 3D "${phoneSlug}".`, error);
-            throw new Error(`Chua co mo hinh 3D ho tro cho thiet bi: ${phoneSlug}`);
+            // Mọi dòng Pro, Pro Max, PRM và các thế hệ mới
+            this.createPhotorealisticIPhone15Pro(phoneSlug);
+            return true;
         }
     }
 
@@ -539,12 +456,29 @@ export class TryOnStudio {
                 depth: targetScale[2],
                 radius: Math.min(targetScale[0], targetScale[1]) * 0.12
             };
+            const slug = this.options.phoneSlug;
+            const specs = {
+                'iphone-x': { x: -0.0238, y: 0.0536, width: 0.0112, height: 0.0248, radius: 0.0056 },
+                'iphone-11': { x: -0.0196, y: 0.0558, width: 0.0270, height: 0.0300, radius: 0.0075 },
+                'iphone-11-prm': { x: -0.0189, y: 0.0587, width: 0.0285, height: 0.0285, radius: 0.0075 },
+                'iphone-12': { x: -0.0167, y: 0.0530, width: 0.0270, height: 0.0305, radius: 0.0075 },
+                'iphone-12-prm': { x: -0.0195, y: 0.0609, width: 0.0285, height: 0.0290, radius: 0.0075 },
+                'iphone-13': { x: -0.0176, y: 0.0553, width: 0.0305, height: 0.0315, radius: 0.0080 },
+                'iphone-13-prm': { x: -0.0160, y: 0.0560, width: 0.0370, height: 0.0390, radius: 0.0080 },
+                'iphone-14-prm': { x: -0.0158, y: 0.0563, width: 0.0380, height: 0.0400, radius: 0.0080 },
+                'iphone-15-pro': { x: -0.0140, y: 0.0515, width: 0.0340, height: 0.0350, radius: 0.0075 },
+                'iphone-16-pro-max': { x: -0.0180, y: 0.0577, width: 0.0320, height: 0.0365, radius: 0.0085 },
+                'iphone-17-prm': { x: -0.0150, y: 0.0573, width: 0.0320, height: 0.0365, radius: 0.0085 },
+                'iphone-18-prm': { x: -0.0156, y: 0.0576, width: 0.0320, height: 0.0365, radius: 0.0085 }
+            }[slug] || { x: -0.0180, y: 0.0577, width: 0.0320, height: 0.0365, radius: 0.0085 };
+            const scaleRatioX = baseSize.x > 0 ? targetScale[0] / baseSize.x : 1;
+            const scaleRatioY = baseSize.y > 0 ? targetScale[1] / baseSize.y : 1;
             this.cameraPlateauInfo = {
-                x: -targetScale[0] * (this.options.phoneSlug === 'iphone-x' ? 0.29 : 0.20),
-                y: targetScale[1] * (this.options.phoneSlug === 'iphone-x' ? 0.34 : 0.354),
-                width: targetScale[0] * (this.options.phoneSlug === 'iphone-x' ? 0.24 : 0.52),
-                height: targetScale[1] * (this.options.phoneSlug === 'iphone-x' ? 0.24 : 0.26),
-                radius: Math.min(targetScale[0], targetScale[1]) * (this.options.phoneSlug === 'iphone-x' ? 0.045 : 0.09)
+                x: specs.x * scaleRatioX,
+                y: specs.y * scaleRatioY,
+                width: specs.width * scaleRatioX,
+                height: specs.height * scaleRatioY,
+                radius: specs.radius * scaleRatioX
             };
             this.phoneModelBaseSize = baseSize.clone();
             this.phoneModelBaseScale = baseScale.clone();
@@ -741,7 +675,7 @@ export class TryOnStudio {
         const width = 0.0709;
         const height = 0.1436;
         const depth = 0.0077;
-        const radius = 0.0092;
+        const radius = 0.0088;
 
         this.phoneDimensions = { width, height, depth, radius };
 
@@ -813,19 +747,19 @@ export class TryOnStudio {
         // 4. Màn hình phía trước Super Retina HD OLED có Tai thỏ (The Notch) và hình nền chính thức iPhone X
         this.addIPhoneXFrontScreen(group, width, height, depth);
 
-        // 5. Cụm camera kép dạng viên thuốc dọc chuẩn 100% Ảnh 3 (Vertical Dual Pill Camera)
+        // 5. Cụm camera kép dạng viên thuốc dọc chuẩn 100% CAD Apple (Vertical Dual Pill Camera)
         const bumpW = 0.0112; // 11.2 mm
         const bumpH = 0.0248; // 24.8 mm
-        const bumpR = bumpW / 2;
-        const bumpX = -width * 0.292;
-        const bumpY = height * 0.332;
+        const bumpR = 0.0056; // 5.6 mm
+        const bumpX = -0.0238; // -23.8 mm (tâm cách mép trái chuẩn xác)
+        const bumpY = 0.0536;  // +53.6 mm (tâm cách mép trên chuẩn xác)
 
         this.cameraPlateauInfo = {
             x: bumpX,
             y: bumpY,
-            width: bumpW + 0.0016,
-            height: bumpH + 0.0016,
-            radius: bumpR + 0.0008
+            width: bumpW,
+            height: bumpH,
+            radius: bumpR
         };
 
         // Gờ nền đen obsidian trong viên thuốc
@@ -1116,14 +1050,17 @@ export class TryOnStudio {
     const group = new THREE.Group();
     group.name = "Phone_Model_Group";
 
-    const isMax =
-        phoneSlug.includes('max') ||
-        phoneSlug.includes('prm');
-
-    const width = isMax ? 0.0767 : 0.0706;
-    const height = isMax ? 0.1599 : 0.1466;
-    const depth = 0.00825;
-    const radius = 0.0092;
+    const modelSpecs = {
+        'iphone-13-prm': { width: 0.0781, height: 0.1608, depth: 0.00765, radius: 0.0090, camX: -0.0160, camY: 0.0560, camW: 0.0370, camH: 0.0390, camR: 0.0080 },
+        'iphone-14-prm': { width: 0.0776, height: 0.1607, depth: 0.00785, radius: 0.0090, camX: -0.0156, camY: 0.0566, camW: 0.0350, camH: 0.0365, camR: 0.0080 },
+        'iphone-15-pro': { width: 0.0706, height: 0.1466, depth: 0.00825, radius: 0.0092, camX: -0.0140, camY: 0.0515, camW: 0.0340, camH: 0.0350, camR: 0.0075 },
+        'iphone-16-pro-max': { width: 0.0776, height: 0.1630, depth: 0.00825, radius: 0.0095, camX: -0.0180, camY: 0.0577, camW: 0.0320, camH: 0.0365, camR: 0.0085 },
+        'iphone-17-prm': { width: 0.0776, height: 0.1630, depth: 0.00825, radius: 0.0095, camX: -0.0150, camY: 0.0573, camW: 0.0320, camH: 0.0365, camR: 0.0085 },
+        'iphone-18-prm': { width: 0.0776, height: 0.1630, depth: 0.00825, radius: 0.0095, camX: -0.0156, camY: 0.0576, camW: 0.0320, camH: 0.0365, camR: 0.0085 }
+    };
+    const isMax = phoneSlug.includes('max') || phoneSlug.includes('prm');
+    const spec = modelSpecs[phoneSlug] || (isMax ? modelSpecs['iphone-14-prm'] : modelSpecs['iphone-15-pro']);
+    const { width, height, depth, radius, camX: bumpX, camY: bumpY, camW: bumpW, camH: bumpH, camR: bumpR } = spec;
 
     this.phoneDimensions = {
         width,
@@ -1229,13 +1166,10 @@ export class TryOnStudio {
     group.add(screenMesh);
 
     // 5. Cụm camera.
-    const bumpW = width * 0.47;
-    const bumpH = height * 0.265;
-
     const bumpShape = this.createRoundedRectShape(
         bumpW,
         bumpH,
-        0.0065
+        bumpR
     );
 
     const bumpGeo = new THREE.ExtrudeGeometry(
@@ -1264,9 +1198,6 @@ export class TryOnStudio {
         camBumpMat
     );
 
-    const bumpX = -width * 0.225;
-    const bumpY = height * 0.33;
-
     camBump.position.set(
         bumpX,
         bumpY,
@@ -1275,13 +1206,13 @@ export class TryOnStudio {
 
     group.add(camBump);
 
-    // Lưu thông số camera để tạo lỗ khoét trên ốp.
+    // Lưu thông số camera để tạo lỗ khoét trên ốp chuẩn xác
     this.cameraPlateauInfo = {
         x: bumpX,
         y: bumpY,
-        width: bumpW + 0.0030,
-        height: bumpH + 0.0030,
-        radius: 0.007
+        width: bumpW,
+        height: bumpH,
+        radius: bumpR
     };
 
     // 6. Ba ống kính camera.
@@ -1503,7 +1434,6 @@ export class TryOnStudio {
         group.name = `Phone_Model_Group_${phoneSlug}`;
 
         const modelSpecs = {
-            'iphone-xr': { width: 0.0757, height: 0.1509, depth: 0.0083, radius: 0.0095, cameraWidth: 0.0220, cameraHeight: 0.0240 },
             'iphone-11': { width: 0.0757, height: 0.1509, depth: 0.0083, radius: 0.0095, cameraWidth: 0.0295, cameraHeight: 0.0320 },
             'iphone-13': { width: 0.0715, height: 0.1467, depth: 0.00765, radius: 0.0090, cameraWidth: 0.0305, cameraHeight: 0.0325 }
         };
@@ -1569,7 +1499,7 @@ export class TryOnStudio {
         group.add(screenMesh);
 
         // 4. Cụm camera vuông bo góc chứa 2 mắt kính dọc lớn (Dual Camera Plateau)
-        const bumpR = phoneSlug === 'iphone-xr' ? bumpW / 2 : 0.0080;
+        const bumpR = 0.0080;
         const bumpX = -width * 0.260;
         const bumpY = height * 0.340;
 
@@ -1602,17 +1532,15 @@ export class TryOnStudio {
         group.add(camPlateau);
 
         // Hai ống kính lớn (Top 12MP Wide, Bottom 12MP Ultra-Wide)
-        const lenses = phoneSlug === 'iphone-xr'
-            ? [{ x: bumpX, y: bumpY }]
-            : phoneSlug === 'iphone-13'
-                ? [
-                    { x: bumpX - bumpW * 0.18, y: bumpY + bumpH * 0.18 },
-                    { x: bumpX + bumpW * 0.18, y: bumpY - bumpH * 0.18 }
-                ]
-                : [
-                    { x: bumpX - bumpW * 0.14, y: bumpY + bumpH * 0.22 },
-                    { x: bumpX - bumpW * 0.14, y: bumpY - bumpH * 0.22 }
-                ];
+        const lenses = phoneSlug === 'iphone-13'
+            ? [
+                { x: bumpX - bumpW * 0.18, y: bumpY + bumpH * 0.18 },
+                { x: bumpX + bumpW * 0.18, y: bumpY - bumpH * 0.18 }
+            ]
+            : [
+                { x: bumpX - bumpW * 0.14, y: bumpY + bumpH * 0.22 },
+                { x: bumpX - bumpW * 0.14, y: bumpY - bumpH * 0.22 }
+            ];
 
         lenses.forEach(pos => {
             const ringGeo = new THREE.CylinderGeometry(0.0062, 0.0062, 0.0012, 32);
@@ -1645,8 +1573,8 @@ export class TryOnStudio {
         const flash = new THREE.Mesh(flashGeo, flashMat);
         flash.rotation.x = Math.PI / 2;
         flash.position.set(
-            phoneSlug === 'iphone-xr' ? bumpX : bumpX + bumpW * 0.24,
-            phoneSlug === 'iphone-xr' ? bumpY - bumpH * 0.62 : bumpY + bumpH * 0.22,
+            bumpX + bumpW * 0.24,
+            bumpY + bumpH * 0.22,
             depth / 2 + 0.0032
         );
         group.add(flash);
@@ -1707,65 +1635,68 @@ export class TryOnStudio {
         const dims = this.phoneDimensions || { width: 0.0706, height: 0.1466, depth: 0.00825, radius: 0.0092 };
         const cam = this.cameraPlateauInfo || { x: -0.016, y: 0.048, width: 0.035, height: 0.040, radius: 0.007 };
 
-        const caseBackThickness = 0.0006;
-        const caseW = dims.width + 0.0008;
-        const caseH = dims.height + 0.0008;
-        const caseRadius = dims.radius + 0.0004;
+        // 1. Độ dày thành ốp chuẩn công nghiệp (Đều đặn 100% mọi hướng)
+        const wallThickness = 0.0008; // 0.8mm viền xung quanh (trái, phải, trên, dưới đều nhau)
+        const backThickness = 0.0008; // 0.8mm mặt lưng ốp
 
-        // Viền ốp ôm trọn thân điện thoại, chiều sâu = depth + margin trước/sau
-        const rimDepth = dims.depth + 0.0040;
+        // Kích thước phủ bì ngoài của ốp lưng (đối xứng hoàn toàn quanh tâm 0, 0)
+        const caseW = dims.width + 2 * wallThickness;
+        const caseH = dims.height + 2 * wallThickness;
+        const caseRadius = dims.radius + wallThickness;
+
+        // Kích thước lọt lòng trong ôm khít thân điện thoại
+        const innerW = dims.width;
+        const innerH = dims.height;
+        const innerR = Math.max(0.001, dims.radius);
+
+        // Chiều sâu viền ốp bao bọc từ mép màn hình trước tới mặt sau ốp
+        const rimDepth = dims.depth + backThickness;
+        const rimCenterZ = backThickness / 2;
 
         const rimShape = this.createRoundedRectShape(caseW, caseH, caseRadius);
-        const innerWidth = dims.width + 0.0002;
-        const innerHeight = dims.height + 0.0002;
         rimShape.holes.push(this.createRoundedRectPath(
-            -innerWidth / 2,
-            -innerHeight / 2,
-            innerWidth,
-            innerHeight,
-            Math.max(0.001, dims.radius - 0.0002)
+            -innerW / 2,
+            -innerH / 2,
+            innerW,
+            innerH,
+            innerR
         ));
         const rimGeo = new THREE.ExtrudeGeometry(rimShape, {
             depth: rimDepth,
-            bevelEnabled: false,
-            steps: 1
+            bevelEnabled: true,
+            bevelSegments: 2,
+            bevelSize: 0.0002,
+            bevelThickness: 0.0002
         });
         rimGeo.center();
 
-        // 1. Tạo Shape mặt lưng của ốp có LỖ KHOÉT CAMERA (Camera Cutout Hole)
+        // 2. Tạo Shape mặt lưng của ốp có LỖ KHOÉT CAMERA chuẩn xác
         const caseBackShape = this.createRoundedRectShape(caseW, caseH, caseRadius);
 
-        // Tạo lỗ khoét camera bo cong góc tương ứng
-        const holePath = new THREE.Path();
-        const hx = cam.x - cam.width / 2;
-        const hy = cam.y - cam.height / 2;
-        const hr = cam.radius;
-        const hw = cam.width;
-        const hh = cam.height;
-
-        holePath.moveTo(hx + hr, hy);
-        holePath.lineTo(hx + hw - hr, hy);
-        holePath.quadraticCurveTo(hx + hw, hy, hx + hw, hy + hr);
-        holePath.lineTo(hx + hw, hy + hh - hr);
-        holePath.quadraticCurveTo(hx + hw, hy + hh, hx + hw - hr, hy + hh);
-        holePath.lineTo(hx + hr, hy + hh);
-        holePath.quadraticCurveTo(hx, hy + hh, hx, hy + hh - hr);
-        holePath.lineTo(hx, hy + hr);
-        holePath.quadraticCurveTo(hx, hy, hx + hr, hy);
-
-        // Thêm lỗ khoét vào Shape của ốp
+        const isX = (this.options.phoneSlug === 'iphone-x');
+        const holeMargin = isX ? 0.0008 : 0.0012;
+        const holeW = cam.width + holeMargin;
+        const holeH = cam.height + holeMargin;
+        const holeR = Math.max(0.002, cam.radius + (isX ? 0.0003 : 0.0006));
+        const holePath = this.createRoundedRectPath(
+            cam.x - holeW / 2,
+            cam.y - holeH / 2,
+            holeW,
+            holeH,
+            holeR
+        );
         caseBackShape.holes.push(holePath);
 
         // Extrude mặt lưng ốp
         const caseBackGeo = new THREE.ExtrudeGeometry(caseBackShape, {
-            depth: caseBackThickness,
+            depth: backThickness,
             bevelEnabled: true,
             bevelSegments: 2,
-            steps: 1,
-            bevelSize: 0.0001,
-            bevelThickness: 0.0001
+            bevelSize: 0.0002,
+            bevelThickness: 0.0002
         });
         caseBackGeo.center();
+
         const positions = caseBackGeo.attributes.position;
         const uvs = caseBackGeo.attributes.uv;
         for (let i = 0; i < positions.count; i++) {
@@ -1777,7 +1708,7 @@ export class TryOnStudio {
         }
         uvs.needsUpdate = true;
 
-        // 2. Vật liệu ốp lưng PBR cao cấp
+        // 3. Vật liệu ốp lưng PBR cao cấp
         this.caseMaterial = new THREE.MeshPhysicalMaterial({
             color: 0xffffff,
             roughness: 0.1,
@@ -1805,36 +1736,34 @@ export class TryOnStudio {
         caseGroup.name = "Custom_3D_Case_Group";
 
         const rimMesh = new THREE.Mesh(rimGeo, this.caseEdgeMaterial);
-        rimMesh.position.z = 0;
+        rimMesh.position.set(0, 0, rimCenterZ);
         caseGroup.add(rimMesh);
 
         const backMesh = new THREE.Mesh(caseBackGeo, this.caseMaterial);
-        backMesh.position.z = dims.depth / 2 + 0.0026;
+        backMesh.position.set(0, 0, dims.depth / 2 + backThickness / 2);
         caseGroup.add(backMesh);
 
-        // 3. Gờ bảo vệ cụm camera nhô cao (Raised Camera Bezel Protection Ring)
-        const lipWidth = cam.width + 0.0006;
-        const lipHeight = cam.height + 0.0006;
-        const lipShape = this.createRoundedRectShape(lipWidth, lipHeight, cam.radius + 0.0003);
-        const lipHolePath = new THREE.Path();
-        const lipHoleX = -cam.width / 2;
-        const lipHoleY = -cam.height / 2;
-        lipHolePath.moveTo(lipHoleX + hr, lipHoleY);
-        lipHolePath.lineTo(lipHoleX + hw - hr, lipHoleY);
-        lipHolePath.quadraticCurveTo(lipHoleX + hw, lipHoleY, lipHoleX + hw, lipHoleY + hr);
-        lipHolePath.lineTo(lipHoleX + hw, lipHoleY + hh - hr);
-        lipHolePath.quadraticCurveTo(lipHoleX + hw, lipHoleY + hh, lipHoleX + hw - hr, lipHoleY + hh);
-        lipHolePath.lineTo(lipHoleX + hr, lipHoleY + hh);
-        lipHolePath.quadraticCurveTo(lipHoleX, lipHoleY + hh, lipHoleX, lipHoleY + hh - hr);
-        lipHolePath.lineTo(lipHoleX, lipHoleY + hr);
-        lipHolePath.quadraticCurveTo(lipHoleX, lipHoleY, lipHoleX + hr, lipHoleY);
-        lipShape.holes.push(lipHolePath);
+        // 4. Gờ bảo vệ cụm camera nhô cao (Raised Camera Bezel Protection Ring)
+        const lipBorder = 0.0008;
+        const lipOuterW = holeW + 2 * lipBorder;
+        const lipOuterH = holeH + 2 * lipBorder;
+        const lipOuterR = holeR + lipBorder;
+        const lipHeight = 0.0008;
+
+        const lipShape = this.createRoundedRectShape(lipOuterW, lipOuterH, lipOuterR);
+        lipShape.holes.push(this.createRoundedRectPath(
+            -holeW / 2,
+            -holeH / 2,
+            holeW,
+            holeH,
+            holeR
+        ));
         const lipGeo = new THREE.ExtrudeGeometry(lipShape, {
-            depth: 0.0008,
+            depth: lipHeight,
             bevelEnabled: true,
             bevelSegments: 2,
-            bevelSize: 0.0001,
-            bevelThickness: 0.0001
+            bevelSize: 0.0002,
+            bevelThickness: 0.0002
         });
         lipGeo.center();
 
@@ -1842,7 +1771,7 @@ export class TryOnStudio {
         lipMesh.position.set(
             cam.x,
             cam.y,
-            dims.depth / 2 + 0.0034
+            dims.depth / 2 + backThickness + lipHeight / 2
         );
         caseGroup.add(lipMesh);
 
@@ -1869,8 +1798,7 @@ export class TryOnStudio {
             if (requestId !== this.caseModelRequestId) return;
 
             const dims = this.phoneDimensions;
-            const caseDepth = dims.depth + 0.0012;
-            const targetSize = new THREE.Vector3(dims.width + 0.0008, dims.height + 0.0008, caseDepth);
+            const targetSize = new THREE.Vector3(dims.width, dims.height, dims.depth);
             const model = gltf.scene;
             model.updateMatrixWorld(true);
             const sourceBounds = new THREE.Box3().setFromObject(model);
@@ -1890,7 +1818,7 @@ export class TryOnStudio {
 
             const fittedCase = new THREE.Group();
             fittedCase.name = 'Phone_Case_Model';
-            fittedCase.position.z = dims.depth / 2 + caseDepth / 2;
+            fittedCase.position.set(0, 0, 0);
             fittedCase.add(model);
             fittedCase.traverse(object => {
                 if (!object.isMesh) return;

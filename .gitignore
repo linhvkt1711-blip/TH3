@@ -9,3 +9,5 @@ AI_Service/dataset*/
 AI_Service/runs/
 runs/
 AI_Service/weights/*candidate*
+AI_Service/.config/
+obj/verify-build/

@@ -16,12 +16,6 @@ PHONE_MODELS = {
         "device_code": "IPX01",
         "case_model_url": "/models/cases/iphone-x/scene.gltf"
     },
-    "iphone-xr": {
-        "id": "iphone-xr",
-        "name": "iPhone XR",
-        "device_code": "IPXR",
-        "case_model_url": ""
-    },
     "iphone-11": {
         "id": "iphone-11",
         "name": "iPhone 11",
@@ -97,26 +91,30 @@ def init_reference_templates():
     if REFERENCE_TEMPLATES:
         return
     ref_mapping = {
-        "media_1794830446764_8bd4adcb.png": "iphone-18-prm",
-        "media_1794830453769_f695f926.jpg": "iphone-13",
-        "media_1794861063980_86edbe66.png": "iphone-18-prm",
-        "media_1794861063982_b159f155.png": "iphone-15-pro",
-        "media_1794861063986_1b029d39.png": "iphone-x",
-        "media_1794861064248_e62a5472.jpg": "iphone-11-prm",
-        "media_1794861064308_23a28cd5.png": "iphone-13",
-        "media_1794861064308_83c9416f.png": "iphone-12-prm",
-        "media_1794861064323_cf3e2020.png": "iphone-13",
-        "media_1794861064325_c88dc605.png": "iphone-16-pro-max",
-        "media_1794861064325_eaef88c7.png": "iphone-16-pro-max",
-        "media_1794861064328_fcdb69f4.png": "iphone-18-prm",
-        "media_1794861064329_fb9ce61d.png": "iphone-12",
-        "media_1794861064335_763a70de.png": "iphone-12-prm",
-        "media_1794861064337_604d3008.png": "iphone-x"
+        "Iphone X (2).jpg": "iphone-x",
+        "iphone x.jpg": "iphone-x",
+        "iPhone 11.jpg": "iphone-11",
+        "iPhone 11 Pro Max.jpg": "iphone-11-prm",
+        "iPhone 12.jpg": "iphone-12",
+        "iPhone 12 Pro Max.jpg": "iphone-12-prm",
+        "iPhone 12 Pro Max (2).jpg": "iphone-12-prm",
+        "iphone 13.jpg": "iphone-13",
+        "iphone 13 (1).jpg": "iphone-13",
+        "iPhone 13 (2).jpg": "iphone-13",
+        "iphone 13 pro max.jpg": "iphone-13-prm",
+        "iphone 14 pro max.png": "iphone-14-prm",
+        "iphone 15 pro.jpg": "iphone-15-pro",
+        "iPhone 15.jpg": "iphone-15-pro",
+        "iPhone 16 Pro Max.jpg": "iphone-16-pro-max",
+        "iPhone 16.jpg": "iphone-16-pro-max",
+        "iphone 17 pro max.png": "iphone-17-prm",
+        "iphone 18 pro max.png": "iphone-18-prm",
+        "iphone 18 pro.png": "iphone-18-prm"
     }
-    user_dir = "C:/Users/BI/.gemini/antigravity/brain/9f400bfb-e3c8-4136-a5aa-614a799303fa/.user_uploaded"
-    if os.path.exists(user_dir):
+    extracted_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "user_uploaded_extracted")
+    if os.path.exists(extracted_dir):
         for fname, model_id in ref_mapping.items():
-            p = os.path.join(user_dir, fname)
+            p = os.path.join(extracted_dir, fname)
             if os.path.exists(p):
                 im = cv2.imread(p)
                 if im is not None:
@@ -414,10 +412,6 @@ def classify_phone(image, bbox, direct_model_id=None, direct_confidence=0.0):
             scores["iphone-13"] += 0.60
             scores["iphone-12"] += 0.55
             scores["iphone-11"] += 0.50
-
-        # D. Camera đơn nhỏ (iPhone XR)
-        elif 0.80 <= bump_ar <= 1.25 and w_ratio < 0.20:
-            scores["iphone-xr"] += 0.70
 
     if detected_bump is None:
         return None

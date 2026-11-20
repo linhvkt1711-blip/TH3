@@ -56,6 +56,7 @@ roca_pipeline = PhonePoseEstimationPipeline() if PhonePoseEstimationPipeline els
 yolo_model = None
 YOLO_ERROR = None
 try:
+    os.environ["YOLO_CONFIG_DIR"] = os.path.join(current_dir, ".config")
     from ultralytics import YOLO  # type: ignore
     configured_weights = os.environ.get("PHONE_YOLO_WEIGHTS")
     if configured_weights:
@@ -81,7 +82,6 @@ except Exception as error:
 
 PHONE_NAMES = {
     "iphone-x": "iPhone X / Xs (iPhone 10)",
-    "iphone-xr": "iPhone XR",
     "iphone-11": "iPhone 11",
     "iphone-11-prm": "iPhone 11 Pro Max",
     "iphone-12": "iPhone 12",
@@ -97,7 +97,6 @@ PHONE_NAMES = {
 
 PHONE_DEVICE_CODES = {
     "iphone-x": "IPX01",
-    "iphone-xr": "IPXR",
     "iphone-11": "IP11",
     "iphone-11-prm": "IP11PM",
     "iphone-12": "IP12",

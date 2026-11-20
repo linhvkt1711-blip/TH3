@@ -1,13 +1,19 @@
 @echo off
+cd /d "%~dp0"
 echo ========================================================
 echo   KHOI DONG AI INFERENCE SERVICE (YOLO + ROCA 6DoF)
+echo   Cong: http://localhost:5001
 echo ========================================================
-python -m pip install -r requirements.txt
-if errorlevel 1 (
-    py -m pip install -r requirements.txt
+
+set "PY=python"
+if exist "..\.venv\Scripts\python.exe" (
+    set "PY=..\.venv\Scripts\python.exe"
+) else if exist ".venv\Scripts\python.exe" (
+    set "PY=.venv\Scripts\python.exe"
 )
-python app.py
+
+echo Dang khoi dong bang: %PY%
+%PY% app.py
 if errorlevel 1 (
-    py app.py
+    pause
 )
-pause

@@ -38,16 +38,6 @@ namespace TH3.Models
             },
             new PhoneModel
             {
-                Id = 2,
-                Name = "iPhone XR",
-                Slug = "iphone-xr",
-                DeviceCode = "IPXR",
-                Brand = "Apple",
-                Model3DPath = "/models/phones/iphone-xr.glb",
-                AvailableColorsJson = "[{\"name\":\"Đen\",\"hex\":\"#1f2020\"},{\"name\":\"Trắng\",\"hex\":\"#f9f6ef\"},{\"name\":\"Xanh Dương\",\"hex\":\"#4597d3\"},{\"name\":\"Vàng\",\"hex\":\"#fed535\"},{\"name\":\"Cam Coral\",\"hex\":\"#fe6e58\"},{\"name\":\"Đỏ\",\"hex\":\"#ba0c2e\"}]"
-            },
-            new PhoneModel
-            {
                 Id = 3,
                 Name = "iPhone 11",
                 Slug = "iphone-11",
