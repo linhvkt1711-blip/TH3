@@ -81,10 +81,47 @@ PHONE_MODELS = {
         "name": "iPhone 18 Pro Max",
         "device_code": "IP18PM",
         "case_model_url": ""
+    },
+    "redmi-note-10-pro": {
+        "id": "redmi-note-10-pro",
+        "name": "Xiaomi Redmi Note 10 Pro",
+        "device_code": "RMN10P",
+        "case_model_url": ""
     }
 }
 
 REFERENCE_TEMPLATES = []
+_ORB_DETECTOR = None
+
+def _get_orb():
+    global _ORB_DETECTOR
+    if _ORB_DETECTOR is None and cv2 is not None:
+        _ORB_DETECTOR = cv2.ORB_create(nfeatures=400)
+    return _ORB_DETECTOR
+
+def _extract_top_camera_orb(bgr_img):
+    """Trích xuất ORB descriptors ở nửa trên (vùng camera) để kháng nứt/bể phần lưng dưới."""
+    orb = _get_orb()
+    if orb is None or bgr_img is None or bgr_img.size == 0:
+        return None
+    h, w = bgr_img.shape[:2]
+    tw = 320
+    th = max(60, int(tw * (h / float(max(1, w)))))
+    resized = cv2.resize(bgr_img, (tw, th), interpolation=cv2.INTER_AREA)
+    top_roi = resized[0:int(th * 0.52), :]
+    gray = cv2.cvtColor(top_roi, cv2.COLOR_BGR2GRAY)
+    gray = cv2.medianBlur(gray, 3)  # Giảm nhiễu vết nứt mảnh
+    _, des = orb.detectAndCompute(gray, None)
+    return des
+
+def _build_template_entry(fname, model_id, im):
+    hsv = cv2.cvtColor(im, cv2.COLOR_BGR2HSV)
+    hist = cv2.calcHist([hsv], [0, 1], None, [16, 16], [0, 180, 0, 256])
+    cv2.normalize(hist, hist, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX)
+    gray = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
+    small = cv2.resize(gray, (64, 64))
+    orb_des = _extract_top_camera_orb(im)
+    return (fname, model_id, hist, small, orb_des)
 
 def init_reference_templates():
     global REFERENCE_TEMPLATES
@@ -118,12 +155,21 @@ def init_reference_templates():
             if os.path.exists(p):
                 im = cv2.imread(p)
                 if im is not None:
-                    hsv = cv2.cvtColor(im, cv2.COLOR_BGR2HSV)
-                    hist = cv2.calcHist([hsv], [0, 1], None, [16, 16], [0, 180, 0, 256])
-                    cv2.normalize(hist, hist, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX)
-                    gray = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
-                    small = cv2.resize(gray, (64, 64))
-                    REFERENCE_TEMPLATES.append((fname, model_id, hist, small))
+                    REFERENCE_TEMPLATES.append(_build_template_entry(fname, model_id, im))
+
+        # Tự động nạp thêm ảnh mẫu Redmi Note 10 Pro nếu có trong user_uploaded_extracted/ hoặc thư mục con redmi-note-10-pro/
+        extra_dirs = [
+            (extracted_dir, lambda f: "redmi" in f.lower()),
+            (os.path.join(extracted_dir, "redmi-note-10-pro"), lambda f: f.lower().endswith((".jpg", ".jpeg", ".png", ".webp")))
+        ]
+        for folder, pred in extra_dirs:
+            if os.path.isdir(folder):
+                for fname in os.listdir(folder):
+                    if pred(fname) and fname.lower().endswith((".jpg", ".jpeg", ".png", ".webp")):
+                        p = os.path.join(folder, fname)
+                        im = cv2.imread(p)
+                        if im is not None:
+                            REFERENCE_TEMPLATES.append(_build_template_entry(fname, "redmi-note-10-pro", im))
 
 def match_reference_template(image):
     init_reference_templates()
@@ -136,13 +182,27 @@ def match_reference_template(image):
         cv2.normalize(hist, hist, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX)
         test_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         test_small = cv2.resize(test_gray, (64, 64))
+        test_orb_des = _extract_top_camera_orb(image)
+        bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=False) if test_orb_des is not None else None
 
         best_score = -1.0
         best_id = None
-        for _, mid, ref_hist, ref_small in REFERENCE_TEMPLATES:
+        for _, mid, ref_hist, ref_small, ref_orb_des in REFERENCE_TEMPLATES:
             color_sim = cv2.compareHist(hist, ref_hist, cv2.HISTCMP_CORREL)
             shape_sim = cv2.matchTemplate(test_small, ref_small, cv2.TM_CCOEFF_NORMED)[0][0]
             total_score = 0.5 * color_sim + 0.5 * shape_sim
+
+            # Nếu ảnh bị nứt/bể phần dưới, ORB ở vùng camera trên vẫn cứu được điểm khớp cục bộ
+            if bf is not None and ref_orb_des is not None and len(ref_orb_des) >= 10 and len(test_orb_des) >= 10:
+                try:
+                    knn = bf.knnMatch(test_orb_des, ref_orb_des, k=2)
+                    good = [m for pair in knn if len(pair) == 2 for m, n in [pair] if m.distance < 0.75 * n.distance]
+                    orb_score = min(1.0, len(good) / 28.0)
+                    if orb_score > 0.45:
+                        total_score = max(total_score, 0.30 * color_sim + 0.70 * orb_score)
+                except Exception:
+                    pass
+
             if total_score > best_score:
                 best_score = total_score
                 best_id = mid
@@ -253,6 +313,60 @@ def detect_phone_bbox(image, yolo_model=None):
 
     return best_box, best_conf, recognized_model_id
 
+def _detect_camera_bump_candidates(resized):
+    """Phân tích cụm camera ở nửa trên mặt lưng (kháng vết nứt & hỗ trợ lật gương)."""
+    r_h, r_w = resized.shape[:2]
+    quadrants = [
+        ("top_left", resized[0:int(r_h * 0.42), 0:int(r_w * 0.50)]),
+        ("top_right", resized[0:int(r_h * 0.42), int(r_w * 0.50):r_w])
+    ]
+
+    best_bump = None
+    best_redmi_bump = None
+    close_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
+
+    for quad_name, quad_img in quadrants:
+        if quad_img.size == 0:
+            continue
+        gray_q = cv2.cvtColor(quad_img, cv2.COLOR_BGR2GRAY)
+        # Lọc trung vị để làm mờ các đường nứt mảnh nhưng giữ nguyên biên cụm camera
+        smooth_q = cv2.medianBlur(gray_q, 5)
+        thresh_q = cv2.adaptiveThreshold(smooth_q, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 15, 3)
+        _, dark_q = cv2.threshold(smooth_q, 95, 255, cv2.THRESH_BINARY_INV)
+
+        # Hàn liền cụm camera nếu bị vết nứt cắt ngang
+        thresh_q = cv2.morphologyEx(thresh_q, cv2.MORPH_CLOSE, close_kernel)
+        dark_q = cv2.morphologyEx(dark_q, cv2.MORPH_CLOSE, close_kernel)
+
+        for m in [thresh_q, dark_q]:
+            cnts_q, _ = cv2.findContours(m, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            for c in cnts_q:
+                bx, by, bw, bh = cv2.boundingRect(c)
+                area = bw * bh
+                area_ratio = area / float(r_w * r_h)
+                w_ratio = bw / float(r_w)
+                aspect = bh / float(max(1, bw))
+
+                if 0.08 <= w_ratio <= 0.60 and 0.008 <= area_ratio <= 0.30 and aspect >= 0.70:
+                    candidate = {
+                        "w": bw,
+                        "h": bh,
+                        "aspect": aspect,
+                        "area_ratio": area_ratio,
+                        "w_ratio": w_ratio,
+                        "quad": quad_name
+                    }
+                    # Lưu riêng ứng viên cụm camera 2 tầng dọc (Redmi Note 10 Pro)
+                    if 1.42 <= aspect <= 2.35 and 0.20 <= w_ratio <= 0.45 and area_ratio >= 0.025:
+                        if best_redmi_bump is None or area_ratio > best_redmi_bump["area_ratio"]:
+                            best_redmi_bump = candidate
+
+                    if best_bump is None or area_ratio > best_bump["area_ratio"]:
+                        best_bump = candidate
+
+    return best_redmi_bump or best_bump, best_redmi_bump is not None
+
+
 def classify_phone(image, bbox, direct_model_id=None, direct_confidence=0.0):
     """
     Phân loại chi tiết dòng điện thoại từ ảnh mặt lưng.
@@ -262,30 +376,20 @@ def classify_phone(image, bbox, direct_model_id=None, direct_confidence=0.0):
     3. Nhận diện cụm 2 camera kép xếp dọc (vertical) -> iPhone 11 / 12.
     4. Nhận diện cụm 3 camera tam giác lớn & màu titan -> iPhone Pro / Pro Max.
     5. Nhận diện cụm camera viên thuốc dọc & chữ iPhone -> iPhone X.
+    6. Nhận diện cụm camera chữ nhật 2 tầng dọc 108MP -> Xiaomi Redmi Note 10 Pro.
     """
-    if direct_model_id:
-        info = PHONE_MODELS.get(direct_model_id)
-        if info is None:
-            return None
-        return {
-            "model_id": info["id"],
-            "model_name": info["name"],
-            "device_code": info["device_code"],
-            "case_model_url": info["case_model_url"],
-            "confidence": round(float(direct_confidence), 4)
-        }
-
-    # 0. ƯU TIÊN 1: So khớp mẫu thực tế chuẩn xác của các dòng iPhone
+    # 0. ƯU TIÊN 1: So khớp mẫu thực tế chuẩn xác (bao gồm cả ảnh mẫu Redmi nếu có)
     matched_id, matched_score = match_reference_template(image)
     if matched_id and matched_id in PHONE_MODELS:
-        info = PHONE_MODELS[matched_id]
-        return {
-            "model_id": info["id"],
-            "model_name": info["name"],
-            "device_code": info["device_code"],
-            "case_model_url": info["case_model_url"],
-            "confidence": round(float(matched_score), 4)
-        }
+        if matched_score >= 0.78 or not direct_model_id:
+            info = PHONE_MODELS[matched_id]
+            return {
+                "model_id": info["id"],
+                "model_name": info["name"],
+                "device_code": info["device_code"],
+                "case_model_url": info["case_model_url"],
+                "confidence": round(float(matched_score), 4)
+            }
 
     h_img, w_img = image.shape[:2]
     x1, y1, x2, y2 = bbox if bbox is not None else (0, 0, w_img, h_img)
@@ -308,12 +412,38 @@ def classify_phone(image, bbox, direct_model_id=None, direct_confidence=0.0):
     resized = cv2.resize(phone, (target_w, target_h), interpolation=cv2.INTER_AREA)
     r_h, r_w = resized.shape[:2]
 
+    # Kiểm chứng quang học cụm camera trước khi chấp nhận nhãn direct_model_id từ YOLO
+    detected_bump, has_redmi_vertical_bump = _detect_camera_bump_candidates(resized)
+
+    if direct_model_id:
+        # Nếu YOLO (vốn train trên iPhone) đoán là iPhone nhưng cụm camera là chữ nhật dọc 2 tầng -> sửa thành Redmi Note 10 Pro
+        if has_redmi_vertical_bump and direct_model_id.startswith("iphone-"):
+            info = PHONE_MODELS["redmi-note-10-pro"]
+            return {
+                "model_id": info["id"],
+                "model_name": info["name"],
+                "device_code": info["device_code"],
+                "case_model_url": info["case_model_url"],
+                "confidence": round(max(0.82, float(direct_confidence)), 4)
+            }
+
+        info = PHONE_MODELS.get(direct_model_id)
+        if info is None:
+            return None
+        return {
+            "model_id": info["id"],
+            "model_name": info["name"],
+            "device_code": info["device_code"],
+            "case_model_url": info["case_model_url"],
+            "confidence": round(float(direct_confidence), 4)
+        }
+
     # Kiểm tra cụm 2 camera kép chéo (iPhone 13) vs thẳng dọc (iPhone 12/11)
     # Vùng camera góc trên
     cam_roi = resized[int(r_h * 0.03):int(r_h * 0.38), int(r_w * 0.06):int(r_w * 0.55)]
     is_diagonal_camera = False
     if cam_roi.size > 0:
-        cam_gray = cv2.cvtColor(cam_roi, cv2.COLOR_BGR2GRAY)
+        cam_gray = cv2.medianBlur(cv2.cvtColor(cam_roi, cv2.COLOR_BGR2GRAY), 5)
         circles = cv2.HoughCircles(cam_gray, cv2.HOUGH_GRADIENT, dp=1.2, minDist=20, param1=45, param2=20, minRadius=10, maxRadius=60)
         if circles is not None and len(circles[0]) >= 2:
             c_sorted = sorted(circles[0], key=lambda x: x[1]) # Sắp xếp theo y
@@ -335,43 +465,8 @@ def classify_phone(image, bbox, direct_model_id=None, direct_confidence=0.0):
             "confidence": round(max(float(direct_confidence), 0.86), 4)
         }
 
-    # 1. Phân tích vùng camera góc trên trái và góc trên phải (do lật gương webcam)
+    # 1. Phân tích vùng camera góc trên trái và góc trên phải (đã lấy từ _detect_camera_bump_candidates)
     scores = {model_id: 0.0 for model_id in PHONE_MODELS}
-    quadrants = [
-        ("top_left", resized[0:int(r_h * 0.38), 0:int(r_w * 0.48)]),
-        ("top_right", resized[0:int(r_h * 0.38), int(r_w * 0.52):r_w])
-    ]
-
-    detected_bump = None
-    for quad_name, quad_img in quadrants:
-        if quad_img.size == 0:
-            continue
-        gray_q = cv2.cvtColor(quad_img, cv2.COLOR_BGR2GRAY)
-        thresh_q = cv2.adaptiveThreshold(gray_q, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 15, 3)
-        _, dark_q = cv2.threshold(gray_q, 95, 255, cv2.THRESH_BINARY_INV)
-
-        for m in [thresh_q, dark_q]:
-            cnts_q, _ = cv2.findContours(m, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-            for c in cnts_q:
-                bx, by, bw, bh = cv2.boundingRect(c)
-                area = bw * bh
-                area_ratio = area / float(r_w * r_h)
-                w_ratio = bw / float(r_w)
-                aspect = bh / float(max(1, bw))
-
-                if 0.08 <= w_ratio <= 0.60 and 0.008 <= area_ratio <= 0.30 and aspect >= 0.70:
-                    if detected_bump is None or (
-                        (1.6 <= aspect <= 3.2 and w_ratio <= 0.30) or 
-                        (0.80 <= aspect <= 1.35 and w_ratio >= 0.32)
-                    ):
-                        detected_bump = {
-                            "w": bw,
-                            "h": bh,
-                            "aspect": aspect,
-                            "area_ratio": area_ratio,
-                            "w_ratio": w_ratio,
-                            "quad": quad_name
-                        }
 
     # 2. Phân tích chữ 'iPhone' ở đáy lưng máy (chỉ có trên iPhone X / 8)
     bottom_text_region = resized[int(r_h * 0.65):int(r_h * 0.88), int(r_w * 0.20):int(r_w * 0.80)]
@@ -412,6 +507,10 @@ def classify_phone(image, bbox, direct_model_id=None, direct_confidence=0.0):
             scores["iphone-13"] += 0.60
             scores["iphone-12"] += 0.55
             scores["iphone-11"] += 0.50
+
+        # D. Cụm camera chữ nhật 2 tầng dọc đặc trưng (Redmi Note 10 Pro)
+        elif 1.45 <= bump_ar <= 2.30 and 0.25 <= w_ratio <= 0.45:
+            scores["redmi-note-10-pro"] += 0.85
 
     if detected_bump is None:
         return None

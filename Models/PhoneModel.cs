@@ -146,6 +146,16 @@ namespace TH3.Models
                 Model3DPath = "/models/phones/iphone-17-prm.glb",
                 AvailableColorsJson = "[{\"name\":\"Silver\",\"hex\":\"#d5d5d2\"},{\"name\":\"Deep Blue\",\"hex\":\"#34475d\"},{\"name\":\"Cosmic Orange\",\"hex\":\"#d27648\"}]"
             },
+            new PhoneModel
+            {
+                Id = 20,
+                Name = "Xiaomi Redmi Note 10 Pro",
+                Slug = "redmi-note-10-pro",
+                DeviceCode = "RMN10P",
+                Brand = "Xiaomi",
+                Model3DPath = "",
+                AvailableColorsJson = "[{\"name\":\"Đồng Gradient (Glacier Blue)\",\"hex\":\"#83a4d4\"},{\"name\":\"Đen Thạch Anh (Onyx Gray)\",\"hex\":\"#2d3436\"},{\"name\":\"Đồng Hoàng Hôn (Gradient Bronze)\",\"hex\":\"#d49a6a\"}]"
+            },
         };
     }
 }

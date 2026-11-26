@@ -138,6 +138,39 @@ namespace TH3.Services
                         MaterialType = "Silicone",
                         CompatibleDeviceCode = "IP05",
                         CategoryId = caseCategory.Id
+                    },
+                    new Product
+                    {
+                        Name = "Ốp Lưng Redmi Note 10 Pro Trong Suốt Chống Sốc Airbag (OL_RMN10P_CLR)",
+                        Price = 120000,
+                        Description = "Mã: OL_RMN10P_CLR | Tương thích: Xiaomi Redmi Note 10 Pro (RMN10P). Thiết kế viền TPU đệm khí 4 góc chống sốc, khoét cụm camera 108MP 2 tầng siêu chuẩn xác.",
+                        ImageUrl = "https://images.unsplash.com/photo-1603302576837-37561b2e2302?w=500",
+                        CaseTexturePath = "https://images.unsplash.com/photo-1603302576837-37561b2e2302?w=500",
+                        MaterialType = "Clear Silicone",
+                        CompatibleDeviceCode = "RMN10P",
+                        CategoryId = caseCategory.Id
+                    },
+                    new Product
+                    {
+                        Name = "Ốp Lưng Redmi Note 10 Pro Da Thuộc Nâu Sang Trọng (OL_RMN10P_LTH)",
+                        Price = 250000,
+                        Description = "Mã: OL_RMN10P_LTH | Tương thích: Xiaomi Redmi Note 10 Pro (RMN10P). Chất liệu da PU cao cấp chống bám vân tay, bảo vệ cụm camera nhô cao.",
+                        ImageUrl = "https://images.unsplash.com/photo-1586105251261-72a756497a11?w=500",
+                        CaseTexturePath = "https://images.unsplash.com/photo-1586105251261-72a756497a11?w=500",
+                        MaterialType = "Leather",
+                        CompatibleDeviceCode = "RMN10P",
+                        CategoryId = caseCategory.Id
+                    },
+                    new Product
+                    {
+                        Name = "Ốp Lưng Redmi Note 10 Pro Nhám Mờ Chống Bám Vân Tay Đen (OL_RMN10P_MAT)",
+                        Price = 150000,
+                        Description = "Mã: OL_RMN10P_MAT | Tương thích: Xiaomi Redmi Note 10 Pro (RMN10P). Bề mặt phủ hạt nano mờ chống trơn trượt, bảo vệ viền máy tối đa.",
+                        ImageUrl = "https://images.unsplash.com/photo-1541807084-5c52b6b3adef?w=500",
+                        CaseTexturePath = "https://images.unsplash.com/photo-1541807084-5c52b6b3adef?w=500",
+                        MaterialType = "Silicone",
+                        CompatibleDeviceCode = "RMN10P",
+                        CategoryId = caseCategory.Id
                     }
                 };
 

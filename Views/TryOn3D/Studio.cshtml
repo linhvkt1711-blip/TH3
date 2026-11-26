@@ -160,6 +160,10 @@
             <button class="btn btn-outline-light glass-studio-panel py-2 px-3" onclick="studio.resetCameraView()" title="Góc nhìn chuẩn mặt lưng">
                 <i class="fa fa-rotate-left me-1"></i> Góc chuẩn
             </button>
+
+            <button class="btn btn-outline-warning glass-studio-panel py-2 px-3" onclick="window.openPreferenceModal()" title="Cài đặt sở thích gợi ý AI">
+                <i class="fa fa-sliders me-1"></i> Sở thích AI
+            </button>
         </div>
     </div>
 
@@ -201,6 +205,7 @@
             <option value="iphone-16-pro-max">10. iPhone 16 Pro Max</option>
             <option value="iphone-17-prm">11. iPhone 17 Pro Max</option>
             <option value="iphone-18-prm">12. iPhone 18 Pro Max</option>
+            <option value="redmi-note-10-pro">13. Xiaomi Redmi Note 10 Pro</option>
         </select>
         <button type="button" id="btnLoadPhoneModel" class="btn btn-sm btn-warning w-100 mt-2 mb-3">Tải điện thoại vào Studio</button>
         <button type="button" id="btnUploadPhoneImage" class="btn btn-sm btn-outline-warning w-100 mb-2">
@@ -323,6 +328,7 @@
                             <option value="iphone-16-pro-max">11. iPhone 16 Pro Max</option>
                             <option value="iphone-17-prm">12. iPhone 17 Pro Max</option>
                             <option value="iphone-18-prm">13. iPhone 18 Pro Max</option>
+                            <option value="redmi-note-10-pro">14. Xiaomi Redmi Note 10 Pro</option>
                         </select>
                         <button type="button" id="btnUseDetectionModel" class="btn btn-warning text-nowrap">Dùng model 3D này</button>
                     </div>
@@ -332,9 +338,124 @@
         </div>
     </div>
 
+    <!-- Modal Khảo Sát Sở Thích Gợi Ý Ốp Lưng (Hybrid AI - Option C) -->
+    <div class="modal fade" id="preferenceModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content bg-dark text-white border border-warning border-opacity-50 shadow-lg">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title fw-bold">
+                        <i class="fa fa-wand-magic-sparkles text-warning me-2"></i> Cá nhân hóa gợi ý ốp lưng AI
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="small text-white-50 mb-3">
+                        Chọn 4 tiêu chí để AI kết hợp hành vi xem của bạn (60%) + sở thích cá nhân (40%) gợi ý ốp lưng chuẩn xác nhất.
+                    </p>
+                    <form id="preferenceForm">
+                        <!-- 1. Phong cách -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-warning">1. PHONG CÁCH ƯA THÍCH</label>
+                            <div class="row g-2">
+                                <div class="col-6 col-md-3">
+                                    <input type="radio" class="btn-check" name="prefStyle" id="styleMinimalist" value="minimalist" autocomplete="off">
+                                    <label class="btn btn-outline-light w-100 btn-sm py-2" for="styleMinimalist">Tối giản</label>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <input type="radio" class="btn-check" name="prefStyle" id="styleLuxury" value="luxury" autocomplete="off">
+                                    <label class="btn btn-outline-light w-100 btn-sm py-2" for="styleLuxury">Sang trọng</label>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <input type="radio" class="btn-check" name="prefStyle" id="styleSporty" value="sporty" autocomplete="off">
+                                    <label class="btn btn-outline-light w-100 btn-sm py-2" for="styleSporty">Thể thao</label>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <input type="radio" class="btn-check" name="prefStyle" id="styleCute" value="cute" autocomplete="off">
+                                    <label class="btn btn-outline-light w-100 btn-sm py-2" for="styleCute">Dễ thương</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2. Chất liệu -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-warning">2. CHẤT LIỆU ƯA THÍCH</label>
+                            <div class="row g-2">
+                                <div class="col-6 col-md-3">
+                                    <input type="radio" class="btn-check" name="prefMaterial" id="matSilicone" value="silicone" autocomplete="off">
+                                    <label class="btn btn-outline-light w-100 btn-sm py-2" for="matSilicone">Silicone dẻo</label>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <input type="radio" class="btn-check" name="prefMaterial" id="matLeather" value="leather" autocomplete="off">
+                                    <label class="btn btn-outline-light w-100 btn-sm py-2" for="matLeather">Da cao cấp</label>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <input type="radio" class="btn-check" name="prefMaterial" id="matTpu" value="tpu" autocomplete="off">
+                                    <label class="btn btn-outline-light w-100 btn-sm py-2" for="matTpu">Nhựa cứng / TPU</label>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <input type="radio" class="btn-check" name="prefMaterial" id="matClear" value="clear" autocomplete="off">
+                                    <label class="btn btn-outline-light w-100 btn-sm py-2" for="matClear">Trong suốt</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3. Khoảng giá -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-warning">3. KHOẢNG GIÁ MONG MUỐN</label>
+                            <div class="row g-2">
+                                <div class="col-4">
+                                    <input type="radio" class="btn-check" name="prefPrice" id="priceBudget" value="budget" autocomplete="off">
+                                    <label class="btn btn-outline-light w-100 btn-sm py-2" for="priceBudget">&lt; 150K</label>
+                                </div>
+                                <div class="col-4">
+                                    <input type="radio" class="btn-check" name="prefPrice" id="priceMid" value="mid" autocomplete="off">
+                                    <label class="btn btn-outline-light w-100 btn-sm py-2" for="priceMid">150K – 350K</label>
+                                </div>
+                                <div class="col-4">
+                                    <input type="radio" class="btn-check" name="prefPrice" id="pricePremium" value="premium" autocomplete="off">
+                                    <label class="btn btn-outline-light w-100 btn-sm py-2" for="pricePremium">&gt; 350K</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 4. Mục đích -->
+                        <div class="mb-2">
+                            <label class="form-label fw-bold small text-warning">4. MỤC ĐÍCH SỬ DỤNG</label>
+                            <div class="row g-2">
+                                <div class="col-6 col-md-3">
+                                    <input type="radio" class="btn-check" name="prefPurpose" id="purpProtection" value="protection" autocomplete="off">
+                                    <label class="btn btn-outline-light w-100 btn-sm py-2" for="purpProtection">Chống sốc</label>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <input type="radio" class="btn-check" name="prefPurpose" id="purpAesthetic" value="aesthetic" autocomplete="off">
+                                    <label class="btn btn-outline-light w-100 btn-sm py-2" for="purpAesthetic">Thời trang</label>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <input type="radio" class="btn-check" name="prefPurpose" id="purpSlim" value="slim" autocomplete="off">
+                                    <label class="btn btn-outline-light w-100 btn-sm py-2" for="purpSlim">Mỏng nhẹ</label>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <input type="radio" class="btn-check" name="prefPurpose" id="purpRugged" value="rugged" autocomplete="off">
+                                    <label class="btn btn-outline-light w-100 btn-sm py-2" for="purpRugged">Siêu bền</label>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="preferenceStatusMsg" class="small mt-2"></div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Để sau</button>
+                    <button type="button" id="btnSavePreferences" class="btn btn-warning fw-bold px-4">
+                        <i class="fa fa-check me-1"></i> Lưu sở thích
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script type="module">
-        import { TryOnStudio } from '/js/tryon-studio.js?v=30';
+        import { TryOnStudio } from '/js/tryon-studio.js?v=34';
 
         // 1. Khởi tạo 3D Studio với đồ họa Photorealistic
         const initialCode = '@(product?.ProductCode ?? "OL01")';
@@ -515,6 +636,7 @@
             'iphone-16-pro-max': { name: 'iPhone 16 Pro Max', code: 'IP05' },
             'iphone-17-prm': { name: 'iPhone 17 Pro Max', code: 'IP17PM' },
             'iphone-18-prm': { name: 'iPhone 18 Pro Max', code: 'IP18PM' },
+            'redmi-note-10-pro': { name: 'Xiaomi Redmi Note 10 Pro', code: 'RMN10P' },
         };
         const initialPhoneSlug = '@(phone?.Slug ?? "")';
         document.getElementById('modelSourceDetails').hidden = initialPhoneSlug !== 'iphone-x';
@@ -557,6 +679,11 @@
                     { name: 'Titan Tự Nhiên', hex: '#d0c4b4' },
                     { name: 'Titan Trắng', hex: '#e2e4e1' },
                     { name: 'Titan Đen', hex: '#3c3b3e' }
+                ],
+                'redmi-note-10-pro': [
+                    { name: 'Xanh Băng (Glacier Blue)', hex: '#83a4d4' },
+                    { name: 'Xám Khoáng Thạch (Onyx Gray)', hex: '#2d3436' },
+                    { name: 'Đồng Hoàng Hôn (Gradient Bronze)', hex: '#d49a6a' }
                 ]
             };
             const activeColors = modelColors[phoneSlug] || [];
@@ -801,9 +928,101 @@
             if (!window.studio.options.phoneSlug) {
                 window.openCameraModal();
             }
+            checkUserPreferences();
         }).catch(error => {
             console.error('Không khởi tạo được 3D Studio.', error);
             hideStudioLoader();
+        });
+
+        // Khảo sát sở thích Hybrid AI (Option C)
+        let preferenceModalInstance = null;
+        function getPreferenceModal() {
+            if (!preferenceModalInstance) {
+                const el = document.getElementById('preferenceModal');
+                if (el) preferenceModalInstance = new bootstrap.Modal(el);
+            }
+            return preferenceModalInstance;
+        }
+
+        function setRadioValue(name, value) {
+            if (!value) return;
+            const el = document.querySelector(`input[name="${name}"][value="${value}"]`);
+            if (el) el.checked = true;
+        }
+
+        window.openPreferenceModal = async function() {
+            const modal = getPreferenceModal();
+            if (!modal) return;
+            document.getElementById('preferenceStatusMsg').textContent = '';
+            try {
+                const res = await fetch('/api/preferences/me');
+                if (res.status === 401) {
+                    document.getElementById('preferenceStatusMsg').innerHTML =
+                        '<span class="text-warning">Vui lòng <a href="/Identity/Account/Login" class="text-warning fw-bold">đăng nhập</a> để lưu sở thích cá nhân.</span>';
+                } else if (res.ok) {
+                    const data = await res.json();
+                    if (data.hasPreferences) {
+                        setRadioValue('prefStyle', data.style);
+                        setRadioValue('prefMaterial', data.material);
+                        setRadioValue('prefPrice', data.priceTier);
+                        setRadioValue('prefPurpose', data.purpose);
+                    }
+                }
+            } catch (e) {
+                console.warn('Không tải được sở thích:', e);
+            }
+            modal.show();
+        };
+
+        async function checkUserPreferences() {
+            try {
+                const res = await fetch('/api/preferences/me');
+                if (!res.ok) return; // 401 khi chưa đăng nhập -> không hiện popup
+                const data = await res.json();
+                if (!data.hasPreferences) {
+                    const modal = getPreferenceModal();
+                    if (modal) modal.show();
+                }
+            } catch (e) {
+                // Bỏ qua nếu offline
+            }
+        }
+
+        document.getElementById('btnSavePreferences')?.addEventListener('click', async function() {
+            const style = document.querySelector('input[name="prefStyle"]:checked')?.value || '';
+            const material = document.querySelector('input[name="prefMaterial"]:checked')?.value || '';
+            const priceTier = document.querySelector('input[name="prefPrice"]:checked')?.value || '';
+            const purpose = document.querySelector('input[name="prefPurpose"]:checked')?.value || '';
+            const msgEl = document.getElementById('preferenceStatusMsg');
+
+            if (!style && !material && !priceTier && !purpose) {
+                msgEl.innerHTML = '<span class="text-warning">Hãy chọn ít nhất 1 tiêu chí trước khi lưu.</span>';
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/preferences', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ style, material, priceTier, purpose })
+                });
+                if (res.status === 401) {
+                    msgEl.innerHTML = '<span class="text-danger">Bạn cần đăng nhập để lưu sở thích.</span>';
+                    return;
+                }
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    msgEl.innerHTML = '<span class="text-success fw-bold">Đã lưu sở thích! Gợi ý AI sẽ cập nhật theo lựa chọn của bạn.</span>';
+                    setTimeout(() => {
+                        const modal = getPreferenceModal();
+                        if (modal) modal.hide();
+                    }, 900);
+                } else {
+                    msgEl.innerHTML = `<span class="text-danger">${data.message || 'Không lưu được sở thích.'}</span>`;
+                }
+            } catch (err) {
+                msgEl.innerHTML = `<span class="text-danger">Lỗi kết nối: ${err.message}</span>`;
+            }
         });
     </script>
 </body>

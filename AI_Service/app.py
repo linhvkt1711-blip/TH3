@@ -11,12 +11,20 @@ if current_dir not in sys.path:
 try:
     import cv2  # type: ignore
     import numpy as np  # type: ignore
-    from fastapi import FastAPI, UploadFile, File, Form  # type: ignore
+    from fastapi import FastAPI, UploadFile, File, Form, Request  # type: ignore
     from fastapi.responses import JSONResponse  # type: ignore
     from fastapi.middleware.cors import CORSMiddleware  # type: ignore
     HAS_FASTAPI = True
 except ImportError:
     HAS_FASTAPI = False
+
+try:
+    from modules.recommender import get_hybrid_recommendations  # type: ignore
+except ImportError:
+    try:
+        from AI_Service.modules.recommender import get_hybrid_recommendations  # type: ignore
+    except ImportError:
+        get_hybrid_recommendations = None
 
 try:
     from modules.roca_service import PhonePoseEstimationPipeline  # type: ignore
@@ -92,7 +100,8 @@ PHONE_NAMES = {
     "iphone-15-pro": "iPhone 15 Pro",
     "iphone-16-pro-max": "iPhone 16 Pro Max",
     "iphone-17-prm": "iPhone 17 Pro Max",
-    "iphone-18-prm": "iPhone 18 Pro Max"
+    "iphone-18-prm": "iPhone 18 Pro Max",
+    "redmi-note-10-pro": "Xiaomi Redmi Note 10 Pro"
 }
 
 PHONE_DEVICE_CODES = {
@@ -108,6 +117,7 @@ PHONE_DEVICE_CODES = {
     "iphone-16-pro-max": "IP05",
     "iphone-17-prm": "IP17PM",
     "iphone-18-prm": "IP18PM",
+    "redmi-note-10-pro": "RMN10P",
 }
 
 if app is not None:
@@ -117,8 +127,63 @@ if app is not None:
             "status": "ok" if (yolo_model is not None or classify_phone is not None) else "unavailable",
             "service": "AI Phone Case Try-on YOLO + ROCA Inference API",
             "yolo_ready": yolo_model is not None,
-            "yolo_error": YOLO_ERROR
+            "yolo_error": YOLO_ERROR,
+            "recommendation_ready": get_hybrid_recommendations is not None
         }
+
+    @app.post("/recommend")
+    @app.post("/api/recommend")
+    async def recommend_products(request: Request):
+        """API gợi ý ốp lưng: Hybrid 60% Implicit + 40% Explicit Preferences."""
+        try:
+            payload = await request.json()
+        except Exception:
+            payload = {}
+
+        user_data            = payload.get("user") or {}
+        products             = payload.get("products") or []
+        history              = payload.get("history") or []
+        target_device_code   = payload.get("target_device_code") or user_data.get("device_code")
+        explicit_preferences = payload.get("explicit_preferences") or None
+
+        if get_hybrid_recommendations is not None:
+            res = get_hybrid_recommendations(
+                user_data=user_data,
+                products=products,
+                history=history,
+                target_device_code=target_device_code,
+                top_k=5,
+                explicit_preferences=explicit_preferences
+            )
+            return res.get("recommendations", [])
+
+        # Fallback cơ bản nếu module gợi ý chưa tải
+        return products[:5]
+
+    @app.post("/api/recommend-details")
+    async def recommend_products_details(request: Request):
+        """API gợi ý chi tiết bao gồm danh sách đề xuất và bộ chỉ số (Precision@5, Recall@5, NDCG@5)."""
+        try:
+            payload = await request.json()
+        except Exception:
+            payload = {}
+
+        user_data            = payload.get("user") or {}
+        products             = payload.get("products") or []
+        history              = payload.get("history") or []
+        target_device_code   = payload.get("target_device_code") or user_data.get("device_code")
+        explicit_preferences = payload.get("explicit_preferences") or None
+
+        if get_hybrid_recommendations is not None:
+            return get_hybrid_recommendations(
+                user_data=user_data,
+                products=products,
+                history=history,
+                target_device_code=target_device_code,
+                top_k=5,
+                explicit_preferences=explicit_preferences
+            )
+        return {"success": False, "message": "Recommendation engine not available"}
 
     @app.post("/api/detect-phone-model")
     async def detect_phone_model(file: UploadFile = File(...), source: str = Form("camera")):

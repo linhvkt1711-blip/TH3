@@ -190,7 +190,8 @@ export class TryOnStudio {
             'iphone-15-pro': [0.0706, 0.1466, 0.00825],
             'iphone-16-pro-max': [0.0776, 0.1630, 0.00825],
             'iphone-17-prm': [0.0780, 0.1634, 0.00875],
-            'iphone-18-prm': [0.0776, 0.1630, 0.00825]
+            'iphone-18-prm': [0.0776, 0.1630, 0.00825],
+            'redmi-note-10-pro': [0.0765, 0.1640, 0.0081]
         };
 
         const modelPaths = {
@@ -279,13 +280,14 @@ export class TryOnStudio {
             // Tỷ lệ trục Z theo tỷ lệ tự nhiên của mô hình để không làm bẹp dí thân máy (camera lồi về phía lưng)
             const scaleZ = (scaleX + scaleY) / 2;
 
-            // Căn giữa mô hình sao cho thân máy nằm chính xác từ [-depth/2, +depth/2]:
-            // Màn hình trước nằm ở innerBounds.min.z, mặt lưng kính ở innerBounds.min.z + dimensions[2] / scaleZ
-            const bodyCenterZ = innerBounds.min.z + (dimensions[2] / scaleZ) / 2;
+            // Căn giữa mô hình:
+            // Trục X và Y căn theo tâm hình học của máy
+            // Trục Z: Thân máy mọi dòng iPhone chuẩn CAD luôn được dựng đối xứng quanh Z = 0
+            // (mặt kính trước nằm tại [-depth/2], mặt lưng tại [+depth/2], cụm camera lồi về +Z).
             const bodyCenterX = (innerBounds.min.x + innerBounds.max.x) / 2;
             const bodyCenterY = (innerBounds.min.y + innerBounds.max.y) / 2;
 
-            gltf.scene.position.set(-bodyCenterX, -bodyCenterY, -bodyCenterZ);
+            gltf.scene.position.set(-bodyCenterX, -bodyCenterY, 0);
 
             this.phoneDimensions = {
                 width: dimensions[0],
@@ -305,9 +307,10 @@ export class TryOnStudio {
                 'iphone-13-prm': { x: -0.0160, y: 0.0560, width: 0.0370, height: 0.0390, radius: 0.0080 },
                 'iphone-14-prm': { x: -0.0156, y: 0.0566, width: 0.0350, height: 0.0365, radius: 0.0080 },
                 'iphone-15-pro': { x: -0.0140, y: 0.0515, width: 0.0340, height: 0.0350, radius: 0.0075 },
-                'iphone-16-pro-max': { x: -0.0180, y: 0.0577, width: 0.0320, height: 0.0365, radius: 0.0085 },
+                'iphone-16-pro-max': { x: -0.0156, y: 0.0575, width: 0.0380, height: 0.0400, radius: 0.0085 },
                 'iphone-17-prm': { x: -0.0150, y: 0.0573, width: 0.0320, height: 0.0365, radius: 0.0085 },
-                'iphone-18-prm': { x: -0.0156, y: 0.0576, width: 0.0320, height: 0.0365, radius: 0.0085 }
+                'iphone-18-prm': { x: -0.0156, y: 0.0576, width: 0.0320, height: 0.0365, radius: 0.0085 },
+                'redmi-note-10-pro': { x: -0.0210, y: 0.0520, width: 0.0280, height: 0.0460, radius: 0.0080 }
             };
 
             this.cameraPlateauInfo = cameraSpecs[phoneSlug] || cameraSpecs['iphone-16-pro-max'];
@@ -376,6 +379,11 @@ export class TryOnStudio {
             return true;
         } catch (error) {
             console.warn(`Đang dùng mô hình 3D chuẩn xác cho "${phoneSlug}".`, error);
+
+            if (phoneSlug === 'redmi-note-10-pro') {
+                this.createPhotorealisticRedmiNote10Pro('#83a4d4');
+                return true;
+            }
 
             if (phoneSlug === 'iphone-x') {
                 this.createPhotorealisticIPhoneX();
@@ -1054,7 +1062,7 @@ export class TryOnStudio {
         'iphone-13-prm': { width: 0.0781, height: 0.1608, depth: 0.00765, radius: 0.0090, camX: -0.0160, camY: 0.0560, camW: 0.0370, camH: 0.0390, camR: 0.0080 },
         'iphone-14-prm': { width: 0.0776, height: 0.1607, depth: 0.00785, radius: 0.0090, camX: -0.0156, camY: 0.0566, camW: 0.0350, camH: 0.0365, camR: 0.0080 },
         'iphone-15-pro': { width: 0.0706, height: 0.1466, depth: 0.00825, radius: 0.0092, camX: -0.0140, camY: 0.0515, camW: 0.0340, camH: 0.0350, camR: 0.0075 },
-        'iphone-16-pro-max': { width: 0.0776, height: 0.1630, depth: 0.00825, radius: 0.0095, camX: -0.0180, camY: 0.0577, camW: 0.0320, camH: 0.0365, camR: 0.0085 },
+        'iphone-16-pro-max': { width: 0.0776, height: 0.1630, depth: 0.00825, radius: 0.0095, camX: -0.0156, camY: 0.0575, camW: 0.0380, camH: 0.0400, camR: 0.0085 },
         'iphone-17-prm': { width: 0.0776, height: 0.1630, depth: 0.00825, radius: 0.0095, camX: -0.0150, camY: 0.0573, camW: 0.0320, camH: 0.0365, camR: 0.0085 },
         'iphone-18-prm': { width: 0.0776, height: 0.1630, depth: 0.00825, radius: 0.0095, camX: -0.0156, camY: 0.0576, camW: 0.0320, camH: 0.0365, camR: 0.0085 }
     };
@@ -1076,13 +1084,15 @@ export class TryOnStudio {
         radius
     );
 
+    const bevelSize = 0.0016;
+    const bevelThickness = 0.0016;
     const extrudeSettings = {
-        depth: depth,
+        depth: Math.max(0.001, depth - 2 * bevelThickness),
         bevelEnabled: true,
         bevelSegments: 8,
         steps: 1,
-        bevelSize: 0.002,
-        bevelThickness: 0.002
+        bevelSize: bevelSize,
+        bevelThickness: bevelThickness
     };
 
     const frameGeo = new THREE.ExtrudeGeometry(
@@ -1140,7 +1150,7 @@ export class TryOnStudio {
         this.backGlassMaterial
     );
 
-    backGlassMesh.position.z = depth / 2 + 0.0020;
+    backGlassMesh.position.z = depth / 2 + 0.0001;
     group.add(backGlassMesh);
 
     // 4. Màn hình phía trước.
@@ -1161,7 +1171,7 @@ export class TryOnStudio {
     );
 
     screenMesh.rotation.y = Math.PI;
-    screenMesh.position.z = -depth / 2 - 0.0020;
+    screenMesh.position.z = -depth / 2 - 0.0001;
 
     group.add(screenMesh);
 
@@ -1175,11 +1185,11 @@ export class TryOnStudio {
     const bumpGeo = new THREE.ExtrudeGeometry(
         bumpShape,
         {
-            depth: 0.0024,
+            depth: 0.0014,
             bevelEnabled: true,
-            bevelSegments: 6,
-            bevelSize: 0.0014,
-            bevelThickness: 0.0014
+            bevelSegments: 4,
+            bevelSize: 0.0004,
+            bevelThickness: 0.0004
         }
     );
 
@@ -1201,7 +1211,7 @@ export class TryOnStudio {
     camBump.position.set(
         bumpX,
         bumpY,
-        depth / 2 + 0.0031
+        depth / 2 + 0.0011
     );
 
     group.add(camBump);
@@ -1254,7 +1264,7 @@ export class TryOnStudio {
         ringMesh.position.set(
             pos.x,
             pos.y,
-            depth / 2 + 0.0048
+            depth / 2 + 0.0024
         );
 
         group.add(ringMesh);
@@ -1280,7 +1290,7 @@ export class TryOnStudio {
         innerMesh.position.set(
             pos.x,
             pos.y,
-            depth / 2 + 0.0049
+            depth / 2 + 0.0025
         );
 
         group.add(innerMesh);
@@ -1312,7 +1322,7 @@ export class TryOnStudio {
         lensGlass.position.set(
             pos.x,
             pos.y,
-            depth / 2 + 0.0055
+            depth / 2 + 0.0028
         );
 
         group.add(lensGlass);
@@ -1341,7 +1351,7 @@ export class TryOnStudio {
     flash.position.set(
         bumpX + bumpW * 0.22,
         bumpY + bumpH * 0.28,
-        depth / 2 + 0.0045
+        depth / 2 + 0.0022
     );
 
     group.add(flash);
@@ -1369,7 +1379,7 @@ export class TryOnStudio {
     lidar.position.set(
         bumpX + bumpW * 0.22,
         bumpY - bumpH * 0.28,
-        depth / 2 + 0.0045
+        depth / 2 + 0.0022
     );
 
     group.add(lidar);
@@ -1395,7 +1405,7 @@ export class TryOnStudio {
     mic.position.set(
         bumpX,
         bumpY - bumpH * 0.28,
-        depth / 2 + 0.0045
+        depth / 2 + 0.0022
     );
 
     group.add(mic);
@@ -1616,6 +1626,244 @@ export class TryOnStudio {
         const volDownBtn = new THREE.Mesh(volDownGeo, btnMat);
         volDownBtn.position.set(-w / 2 - 0.0006, h * 0.06, 0);
         group.add(volDownBtn);
+    }
+
+    // ==================================================================================
+    // TẠO MÔ HÌNH XIAOMI REDMI NOTE 10 PRO CHUẨN XÁC (CỤM CAMERA 108MP 2 TẦNG ĐẶC TRƯNG)
+    // ==================================================================================
+    createPhotorealisticRedmiNote10Pro(colorHex = '#83a4d4') {
+        if (this.phoneMesh) {
+            this.phoneGroup.remove(this.phoneMesh);
+            this.phoneMesh = null;
+        }
+
+        this.phoneMeshUsesRotatedAxes = false;
+        this.isIPhoneX = false;
+        this.options.phoneSlug = 'redmi-note-10-pro';
+
+        const group = new THREE.Group();
+        group.name = 'Phone_Model_Group_RedmiNote10Pro';
+
+        const width = 0.0765;
+        const height = 0.1640;
+        const depth = 0.0081;
+        const radius = 0.0090;
+
+        this.phoneDimensions = { width, height, depth, radius };
+
+        // 1. Khung viền polycarbonate/kim loại bo cong chuẩn công nghệ
+        const bevelSize = 0.0016;
+        const bevelThickness = 0.0016;
+        const frameShape = this.createRoundedRectShape(width, height, radius);
+        const frameGeo = new THREE.ExtrudeGeometry(frameShape, {
+            depth: Math.max(0.001, depth - 2 * bevelThickness),
+            bevelEnabled: true,
+            bevelSegments: 8,
+            steps: 1,
+            bevelSize: bevelSize,
+            bevelThickness: bevelThickness
+        });
+        frameGeo.center();
+
+        const intColor = parseInt(colorHex.replace('#', '0x'), 16);
+        this.phoneBodyMaterial = new THREE.MeshPhysicalMaterial({
+            color: colorHex,
+            metalness: 0.82,
+            roughness: 0.28,
+            clearcoat: 0.40,
+            clearcoatRoughness: 0.12,
+            name: 'Redmi_Frame_Mat'
+        });
+        this.frameMesh = new THREE.Mesh(frameGeo, this.phoneBodyMaterial);
+        group.add(this.frameMesh);
+
+        // 2. Nút bấm vật lý (Redmi Note 10 Pro có cụm phím âm lượng và phím nguồn tích hợp vân tay ở cạnh phải)
+        const btnMat = this.phoneBodyMaterial;
+        // Phím nguồn / vân tay (Cạnh phải)
+        const powerGeo = new THREE.BoxGeometry(0.0012, 0.016, 0.0018);
+        const powerBtn = new THREE.Mesh(powerGeo, btnMat);
+        powerBtn.position.set(width / 2 + 0.0006, height * 0.08, 0);
+        group.add(powerBtn);
+
+        // Phím âm lượng liền (Cạnh phải, phía trên phím nguồn)
+        const volGeo = new THREE.BoxGeometry(0.0012, 0.026, 0.0018);
+        const volBtn = new THREE.Mesh(volGeo, btnMat);
+        volBtn.position.set(width / 2 + 0.0006, height * 0.22, 0);
+        group.add(volBtn);
+
+        // 3. Mặt lưng kính bóng bẩy với logo Redmi
+        const backGlassGeo = new THREE.PlaneGeometry(width * 0.97, height * 0.97);
+        const redmiTexture = this.generateRedmiLogoTexture(intColor);
+        this.backGlassMaterial = new THREE.MeshPhysicalMaterial({
+            color: colorHex,
+            map: redmiTexture,
+            roughness: 0.15,
+            metalness: 0.20,
+            clearcoat: 0.90,
+            clearcoatRoughness: 0.08,
+            transmission: 0.08,
+            ior: 1.52,
+            name: 'Redmi_Back_Glass'
+        });
+        const backGlassMesh = new THREE.Mesh(backGlassGeo, this.backGlassMaterial);
+        backGlassMesh.position.z = depth / 2 + 0.0001;
+        group.add(backGlassMesh);
+
+        // 4. Màn hình AMOLED phía trước với nốt ruồi DotDisplay siêu nhỏ
+        const screenGeo = new THREE.PlaneGeometry(width * 0.965, height * 0.965);
+        const screenMat = new THREE.MeshStandardMaterial({
+            color: 0x050505,
+            roughness: 0.04,
+            metalness: 0.95
+        });
+        const screenMesh = new THREE.Mesh(screenGeo, screenMat);
+        screenMesh.rotation.y = Math.PI;
+        screenMesh.position.z = -depth / 2 - 0.0001;
+        group.add(screenMesh);
+
+        // Punch-hole camera trước ở chính giữa trên cùng
+        const punchGeo = new THREE.CircleGeometry(0.0016, 32);
+        const punchMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
+        const punchMesh = new THREE.Mesh(punchGeo, punchMat);
+        punchMesh.rotation.y = Math.PI;
+        punchMesh.position.set(0, height * 0.44, -depth / 2 - 0.00015);
+        group.add(punchMesh);
+
+        // 5. CỤM CAMERA REDMI NOTE 10 PRO (Thiết kế 2 tầng đặc trưng: 108MP ở trên, 3 camera phụ ở dưới)
+        const camX = -0.0210;
+        const camY = 0.0520;
+        const camW = 0.0280;
+        const camH = 0.0460;
+        const camR = 0.0080;
+
+        this.cameraPlateauInfo = {
+            x: camX,
+            y: camY,
+            width: camW,
+            height: camH,
+            radius: camR
+        };
+
+        // Tầng 1: Đế nền đen rộng (chứa đèn Flash & cảm biến bên phải)
+        const bumpShape = this.createRoundedRectShape(camW, camH, camR);
+        const bumpGeo = new THREE.ExtrudeGeometry(bumpShape, {
+            depth: 0.0010,
+            bevelEnabled: true,
+            bevelSegments: 4,
+            bevelSize: 0.0003,
+            bevelThickness: 0.0003
+        });
+        bumpGeo.center();
+        const bumpMat = new THREE.MeshPhysicalMaterial({
+            color: 0x0e1013,
+            roughness: 0.14,
+            metalness: 0.65,
+            clearcoat: 1.0,
+            clearcoatRoughness: 0.05
+        });
+        const camBump = new THREE.Mesh(bumpGeo, bumpMat);
+        camBump.position.set(camX, camY, depth / 2 + 0.0005);
+        group.add(camBump);
+
+        // Khối camera 2 tầng lệch trái (giống hệt ảnh thật Redmi Note 10 Pro):
+        // - Nửa trên màu xám bạc (ống kính 108MP)
+        // - Nửa dưới màu đen bóng (2 ống kính nhỏ ngang + 1 ống kính lớn dưới)
+        const islandX = camX - camW * 0.14;
+        const islandW = camW * 0.64;
+
+        // Tầng bạc trên cùng
+        const silverShape = this.createRoundedRectShape(islandW, camH * 0.30, 0.0030);
+        const silverGeo = new THREE.ExtrudeGeometry(silverShape, { depth: 0.0010, bevelEnabled: true, bevelSegments: 3, bevelSize: 0.0002, bevelThickness: 0.0002 });
+        silverGeo.center();
+        const silverPlateMat = new THREE.MeshStandardMaterial({ color: 0x9fa6ad, roughness: 0.32, metalness: 0.72 });
+        const silverPlate = new THREE.Mesh(silverGeo, silverPlateMat);
+        silverPlate.position.set(islandX, camY + camH * 0.30, depth / 2 + 0.0014);
+        group.add(silverPlate);
+
+        // Khối đen phía dưới tầng bạc
+        const darkIslandShape = this.createRoundedRectShape(islandW, camH * 0.60, 0.0030);
+        const darkIslandGeo = new THREE.ExtrudeGeometry(darkIslandShape, { depth: 0.0010, bevelEnabled: true, bevelSegments: 3, bevelSize: 0.0002, bevelThickness: 0.0002 });
+        darkIslandGeo.center();
+        const darkIslandMat = new THREE.MeshPhysicalMaterial({ color: 0x131518, roughness: 0.15, metalness: 0.55, clearcoat: 0.9 });
+        const darkIsland = new THREE.Mesh(darkIslandGeo, darkIslandMat);
+        darkIsland.position.set(islandX, camY - camH * 0.14, depth / 2 + 0.0014);
+        group.add(darkIsland);
+
+        const ringMat = new THREE.MeshStandardMaterial({ color: 0x454a50, roughness: 0.25, metalness: 0.85 });
+        const lensGlassMat = new THREE.MeshPhysicalMaterial({
+            color: 0x071322,
+            roughness: 0.04,
+            metalness: 0.85,
+            clearcoat: 1.0,
+            clearcoatRoughness: 0.02
+        });
+
+        // Ống kính 108MP chính trên tầng bạc
+        const topLensY = camY + camH * 0.30;
+        const mainRing = new THREE.Mesh(new THREE.CylinderGeometry(0.0056, 0.0056, 0.0010, 32), ringMat);
+        mainRing.rotation.x = Math.PI / 2;
+        mainRing.position.set(islandX, topLensY, depth / 2 + 0.0021);
+        group.add(mainRing);
+
+        const mainLens = new THREE.Mesh(new THREE.CylinderGeometry(0.0040, 0.0040, 0.0011, 32), lensGlassMat);
+        mainLens.rotation.x = Math.PI / 2;
+        mainLens.position.set(islandX, topLensY, depth / 2 + 0.0022);
+        group.add(mainLens);
+
+        // 2 ống kính nhỏ nằm ngang ở hàng giữa
+        const midY = camY - camH * 0.02;
+        for (const dx of [-0.0042, 0.0042]) {
+            const sr = new THREE.Mesh(new THREE.CylinderGeometry(0.0025, 0.0025, 0.0008, 24), ringMat);
+            sr.rotation.x = Math.PI / 2;
+            sr.position.set(islandX + dx, midY, depth / 2 + 0.0021);
+            group.add(sr);
+
+            const sg = new THREE.Mesh(new THREE.CylinderGeometry(0.0018, 0.0018, 0.0009, 24), lensGlassMat);
+            sg.rotation.x = Math.PI / 2;
+            sg.position.set(islandX + dx, midY, depth / 2 + 0.0022);
+            group.add(sg);
+        }
+
+        // 1 ống kính lớn ở hàng dưới cùng
+        const botY = camY - camH * 0.27;
+        const botRing = new THREE.Mesh(new THREE.CylinderGeometry(0.0048, 0.0048, 0.0009, 32), ringMat);
+        botRing.rotation.x = Math.PI / 2;
+        botRing.position.set(islandX, botY, depth / 2 + 0.0021);
+        group.add(botRing);
+
+        const botLens = new THREE.Mesh(new THREE.CylinderGeometry(0.0034, 0.0034, 0.0010, 32), lensGlassMat);
+        botLens.rotation.x = Math.PI / 2;
+        botLens.position.set(islandX, botY, depth / 2 + 0.0022);
+        group.add(botLens);
+
+        // Đèn Flash LED + điểm đỏ cảm biến ở dải đen bên phải
+        const flashX = camX + camW * 0.30;
+        const flash = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.0016, 0.0016, 0.0006, 16),
+            new THREE.MeshStandardMaterial({ color: 0xfff5cc, roughness: 0.25, emissive: 0xffeedd, emissiveIntensity: 0.4 })
+        );
+        flash.rotation.x = Math.PI / 2;
+        flash.position.set(flashX, camY + camH * 0.10, depth / 2 + 0.0013);
+        group.add(flash);
+
+        // Cổng USB-C + loa ở cạnh dưới & jack 3.5mm ở cạnh trên
+        const portMat = new THREE.MeshStandardMaterial({ color: 0x101214, roughness: 0.4, metalness: 0.7 });
+        const usbc = new THREE.Mesh(new THREE.BoxGeometry(0.009, 0.0015, 0.003), portMat);
+        usbc.position.set(0, -height / 2 - 0.0002, 0);
+        group.add(usbc);
+
+        const jack = new THREE.Mesh(new THREE.CylinderGeometry(0.0018, 0.0018, 0.0015, 16), portMat);
+        jack.position.set(-width * 0.25, height / 2 + 0.0002, 0);
+        group.add(jack);
+
+        group.rotation.set(0, 0, 0);
+        group.position.set(0, 0, 0);
+
+        this.phoneMesh = group;
+        this.phoneGroup.add(this.phoneMesh);
+        this.phoneModelBaseSize = new THREE.Vector3(width, height, depth);
+        this.phoneModelBaseScale = this.phoneMesh.scale.clone();
+        console.log(`Đã tạo mô hình 3D Xiaomi Redmi Note 10 Pro chuẩn xác.`);
     }
 
     // ==================================================================================
@@ -2120,7 +2368,9 @@ export class TryOnStudio {
         if (this.backGlassMaterial) {
             const intVal = parseInt(hexColor.replace('#', '0x'), 16);
             this.backGlassMaterial.color.set(hexColor);
-            if (!this.isIPhoneX) {
+            if (this.options.phoneSlug === 'redmi-note-10-pro') {
+                this.backGlassMaterial.map = this.generateRedmiLogoTexture(intVal);
+            } else if (!this.isIPhoneX) {
                 this.backGlassMaterial.map = this.generateAppleLogoTexture(intVal);
             }
             this.backGlassMaterial.needsUpdate = true;
@@ -2230,6 +2480,32 @@ export class TryOnStudio {
         ctx.arc(0, -92, 24, 0, Math.PI * 2);
         ctx.fill();
 
+        ctx.restore();
+
+        const tex = new THREE.CanvasTexture(canvas);
+        tex.colorSpace = THREE.SRGBColorSpace;
+        tex.flipY = false;
+        tex.anisotropy = Math.min(this.renderer.capabilities.getMaxAnisotropy(), 8);
+        return tex;
+    }
+
+    // Vẽ logo Redmi thanh lịch ở góc dưới bên trái mặt lưng
+    generateRedmiLogoTexture(baseColorHex) {
+        const canvas = document.createElement('canvas');
+        canvas.width = 1024;
+        canvas.height = 2048;
+        const ctx = canvas.getContext('2d');
+
+        // Nền mặt lưng gradient
+        ctx.fillStyle = `#${baseColorHex.toString(16).padStart(6, '0')}`;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Chữ Redmi thanh lịch ở góc dưới bên trái
+        ctx.save();
+        ctx.translate(140, 1850);
+        ctx.fillStyle = "rgba(255, 255, 255, 0.70)";
+        ctx.font = "bold 58px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+        ctx.fillText("Redmi", 0, 0);
         ctx.restore();
 
         const tex = new THREE.CanvasTexture(canvas);
